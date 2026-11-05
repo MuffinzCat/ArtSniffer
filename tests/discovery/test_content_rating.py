@@ -5,7 +5,7 @@ import dataclasses
 import pytest
 
 from artsniffer.content.rating import ContentRating
-from artsniffer.discovered_artwork_content_rating import (
+from artsniffer.discovery.content_rating import (
     DiscoveredArtworkContentRating,
     unknown_discovered_artwork_content_rating,
 )

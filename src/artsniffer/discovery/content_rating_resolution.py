@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from artsniffer.discovered_artwork import DiscoveredArtwork
-from artsniffer.discovered_artwork_content_rating import DiscoveredArtworkContentRating
-from artsniffer.discovered_post import DiscoveredPost
+from artsniffer.discovery.artwork import DiscoveredArtwork
+from artsniffer.discovery.content_rating import DiscoveredArtworkContentRating
+from artsniffer.discovery.post import DiscoveredPost
 
 
 class DiscoveredArtworkContentRatingResolutionReason(StrEnum):

@@ -3,17 +3,17 @@
 import pytest
 
 from artsniffer.content.rating import ContentRating
-from artsniffer.discovered_artwork import DiscoveredArtwork
-from artsniffer.discovered_artwork_content_rating import DiscoveredArtworkContentRating
-from artsniffer.discovered_artwork_content_rating_resolution import (
+from artsniffer.discovery.artwork import DiscoveredArtwork
+from artsniffer.discovery.content_rating import DiscoveredArtworkContentRating
+from artsniffer.discovery.content_rating_resolution import (
     DiscoveredArtworkContentRatingResolution,
     is_discovered_artwork_content_rating_resolved,
     resolve_discovered_artwork_content_rating,
 )
-from artsniffer.discovered_artwork_content_rating_resolution import (
+from artsniffer.discovery.content_rating_resolution import (
     DiscoveredArtworkContentRatingResolutionReason as Reason,
 )
-from artsniffer.discovered_post import DiscoveredPost
+from artsniffer.discovery.post import DiscoveredPost
 
 
 def _rating(

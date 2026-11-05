@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.discovered_artwork import DiscoveredArtwork
+from artsniffer.discovery.artwork import DiscoveredArtwork
 
 
 def test_discovered_artwork_preserves_all_fields() -> None:

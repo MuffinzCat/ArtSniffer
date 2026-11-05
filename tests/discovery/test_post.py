@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.discovered_post import DiscoveredPost
+from artsniffer.discovery.post import DiscoveredPost
 
 
 def test_discovered_post_preserves_required_fields_and_tags() -> None:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.discovery_source import DiscoverySource
+from artsniffer.discovery.source import DiscoverySource
 
 
 def test_discovery_source_uses_required_values_and_defaults() -> None:
