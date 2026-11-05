@@ -85,31 +85,22 @@ def test_safety_gate_decision_has_exactly_two_fields() -> None:
 
 def test_safety_module_imports_only_standard_library_modules() -> None:
     """Verify the safety decision module depends only on Python standard library."""
-    decision_path = (
-        Path(__file__).resolve().parents[2] / "src/artsniffer/safety/decision.py"
-    )
+    decision_path = Path(__file__).resolve().parents[2] / "src/artsniffer/safety/decision.py"
     decision_ast = ast.parse(decision_path.read_text(encoding="utf-8"))
     import_nodes = [
-        node
-        for node in ast.walk(decision_ast)
-        if isinstance(node, (ast.Import, ast.ImportFrom))
+        node for node in ast.walk(decision_ast) if isinstance(node, (ast.Import, ast.ImportFrom))
     ]
     relative_imports = [
         node for node in import_nodes if isinstance(node, ast.ImportFrom) and node.level > 0
     ]
     imported_modules = [
-        alias.name
-        for node in import_nodes
-        if isinstance(node, ast.Import)
-        for alias in node.names
+        alias.name for node in import_nodes if isinstance(node, ast.Import) for alias in node.names
     ] + [
         node.module
         for node in import_nodes
         if isinstance(node, ast.ImportFrom) and node.module is not None
     ]
-    imported_top_level_modules = {
-        module.partition(".")[0] for module in imported_modules
-    }
+    imported_top_level_modules = {module.partition(".")[0] for module in imported_modules}
     non_standard_library_imports = imported_top_level_modules - sys.stdlib_module_names
 
     assert not relative_imports, f"Found relative imports in safety.decision: {relative_imports}"
