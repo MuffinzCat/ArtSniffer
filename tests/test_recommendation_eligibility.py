@@ -13,6 +13,48 @@ from artsniffer.recommendation_eligibility import (
 
 
 @pytest.mark.parametrize(
+    ("eligible", "reason"),
+    [
+        (True, RecommendationEligibilityReason.ELIGIBLE),
+        (False, RecommendationEligibilityReason.PROFILE_DISABLED),
+        (False, RecommendationEligibilityReason.PROFILE_MISMATCH),
+        (False, RecommendationEligibilityReason.BELOW_THRESHOLD),
+    ],
+)
+def test_eligibility_decision_accepts_consistent_flag_and_reason(
+    eligible: bool,
+    reason: RecommendationEligibilityReason,
+) -> None:
+    """Every valid eligibility reason can be represented consistently."""
+
+    decision = RecommendationEligibilityDecision(eligible=eligible, reason=reason)
+
+    assert decision.eligible is eligible
+    assert decision.reason is reason
+
+
+@pytest.mark.parametrize(
+    ("eligible", "reason"),
+    [
+        (False, RecommendationEligibilityReason.ELIGIBLE),
+        (True, RecommendationEligibilityReason.PROFILE_DISABLED),
+        (True, RecommendationEligibilityReason.PROFILE_MISMATCH),
+        (True, RecommendationEligibilityReason.BELOW_THRESHOLD),
+    ],
+)
+def test_eligibility_decision_rejects_contradictory_flag_and_reason(
+    eligible: bool,
+    reason: RecommendationEligibilityReason,
+) -> None:
+    """Contradictory eligibility and reason values are rejected."""
+
+    with pytest.raises(ValueError) as error:
+        RecommendationEligibilityDecision(eligible=eligible, reason=reason)
+
+    assert str(error.value) == "Eligibility flag must agree with the eligibility reason."
+
+
+@pytest.mark.parametrize(
     ("enabled", "profile_id", "threshold", "candidate_profile_id", "score", "eligible", "reason"),
     [
         (True, "cosy-foxes", 0.75, "cosy-foxes", 0.75, True, "eligible"),
