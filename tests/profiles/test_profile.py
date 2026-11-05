@@ -3,12 +3,12 @@
 import pytest
 
 from artsniffer.content.rating import ContentRating
-from artsniffer.profile import RecommendationProfile
-from artsniffer.profile_content_policy import (
+from artsniffer.profiles.content_policy import (
     ProfileContentPolicy,
     ProfileContentPolicyMode,
     default_profile_content_policy,
 )
+from artsniffer.profiles.profile import RecommendationProfile
 
 
 def test_profile_uses_required_values_and_defaults() -> None:

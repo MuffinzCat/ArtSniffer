@@ -5,8 +5,8 @@ from collections.abc import Sequence
 
 from artsniffer.artwork_analysis import ArtworkAnalysis
 from artsniffer.collection_artwork import CollectionArtworkLink
-from artsniffer.profile import RecommendationProfile
-from artsniffer.profile_reference import ProfileReferenceLink
+from artsniffer.profiles.profile import RecommendationProfile
+from artsniffer.profiles.reference import ProfileReferenceLink
 from artsniffer.reference import ReferenceCollection
 from artsniffer.reference_source import ReferenceSource
 

@@ -4,7 +4,7 @@ from math import isfinite
 
 from artsniffer.artwork_analysis import ArtworkAnalysis
 from artsniffer.collection_artwork import CollectionArtworkLink
-from artsniffer.profile_reference import ProfileReferenceLink
+from artsniffer.profiles.reference import ProfileReferenceLink
 from artsniffer.recommendation_score import RecommendationScoreComponent
 from artsniffer.similarity import cosine_similarity
 

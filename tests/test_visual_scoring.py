@@ -4,7 +4,7 @@ import pytest
 
 from artsniffer.artwork_analysis import ArtworkAnalysis
 from artsniffer.collection_artwork import CollectionArtworkLink
-from artsniffer.profile_reference import ProfileReferenceLink
+from artsniffer.profiles.reference import ProfileReferenceLink
 from artsniffer.visual_scoring import calculate_visual_similarity_score
 
 

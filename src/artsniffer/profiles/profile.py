@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from artsniffer.profile_content_policy import (
+from artsniffer.profiles.content_policy import (
     ProfileContentPolicy,
     default_profile_content_policy,
 )

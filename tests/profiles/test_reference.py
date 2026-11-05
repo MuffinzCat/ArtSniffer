@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.profile_reference import ProfileReferenceLink
+from artsniffer.profiles.reference import ProfileReferenceLink
 
 
 def test_profile_reference_link_uses_required_values_and_default_weight() -> None:

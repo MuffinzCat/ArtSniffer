@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from artsniffer.content.rating import ContentRating, content_rating_rank, is_known_content_rating
-from artsniffer.profile_content_policy import ProfileContentPolicy, ProfileContentPolicyMode
+from artsniffer.profiles.content_policy import ProfileContentPolicy, ProfileContentPolicyMode
 
 
 class ContentPolicyReason(StrEnum):

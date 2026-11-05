@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from artsniffer.profile import RecommendationProfile
+from artsniffer.profiles.profile import RecommendationProfile
 from artsniffer.recommendation import RecommendationCandidate
 
 
