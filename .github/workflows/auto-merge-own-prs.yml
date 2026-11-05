@@ -55,10 +55,18 @@ jobs:
       github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pull-requests: write
     steps:
       - name: Disable auto-merge for manual review
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --disable-auto "$PR_URL"
+        run: |
+          # Separate assignment: a gh failure aborts the step (bash -e) rather than reading as false.
+          auto_merge_enabled="$(gh pr view "$PR_URL" --json autoMergeRequest --jq '.autoMergeRequest != null')"
+          if [ "$auto_merge_enabled" = "true" ]; then
+            gh pr merge --disable-auto "$PR_URL"
+          else
+            echo "Auto-merge is not enabled; desired safe state already exists."
+          fi
