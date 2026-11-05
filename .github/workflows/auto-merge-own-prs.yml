@@ -10,9 +10,11 @@ on:
       - labeled
       - unlabeled
 
-permissions:
-  contents: write
-  pull-requests: write
+concurrency:
+  group: auto-merge-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   enable-auto-merge:
@@ -23,12 +25,28 @@ jobs:
       !contains(github.event.pull_request.labels.*.name, 'manual-review') &&
       github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Enable native squash auto-merge
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: |
+          if gh pr view "$PR_URL" --json state,isDraft,baseRefName,headRepository,author,labels |
+            jq -e '
+              .state == "OPEN" and
+              .isDraft == false and
+              .baseRefName == "main" and
+              .author.login == "MuffinzCat" and
+              .headRepository.nameWithOwner == "MuffinzCat/ArtSniffer" and
+              all(.labels[]; .name != "manual-review")
+            ' >/dev/null; then
+            gh pr merge --auto --squash "$PR_URL"
+          else
+            echo "Pull request is no longer eligible for auto-merge."
+          fi
 
   disable-auto-merge-for-manual-review:
     if: >-
@@ -38,7 +56,6 @@ jobs:
       github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       pull-requests: write
     steps:
       - name: Disable auto-merge for manual review
