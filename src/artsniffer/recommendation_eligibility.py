@@ -23,6 +23,11 @@ class RecommendationEligibilityDecision:
     eligible: bool
     reason: RecommendationEligibilityReason
 
+    def __post_init__(self) -> None:
+        """Reject eligibility flags that contradict the decision reason."""
+        if self.eligible != (self.reason is RecommendationEligibilityReason.ELIGIBLE):
+            raise ValueError("Eligibility flag must agree with the eligibility reason.")
+
 
 def evaluate_recommendation_eligibility(
     profile: RecommendationProfile,
