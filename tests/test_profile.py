@@ -23,12 +23,27 @@ def test_profile_uses_required_values_and_defaults() -> None:
     assert profile.threshold == 0.75
 
 
+def test_profile_preserves_disabled_state() -> None:
+    """A profile can be disabled without changing its other configuration."""
+
+    profile = RecommendationProfile(
+        id="cosy-foxes",
+        name="Cosy Foxes",
+        enabled=False,
+    )
+
+    assert profile.enabled is False
+
+
 @pytest.mark.parametrize("invalid_id", ["", " ", "   "])
 def test_profile_rejects_empty_or_whitespace_id(invalid_id: str) -> None:
     """Profile IDs must contain at least one non-whitespace character."""
 
     # Invalid IDs should never be allowed into the rest of ArtSniffer.
-    with pytest.raises(ValueError, match="Profile ID must not be empty or whitespace"):
+    with pytest.raises(
+        ValueError,
+        match=r"\AProfile ID must not be empty or whitespace\.\Z",
+    ):
         RecommendationProfile(id=invalid_id, name="Cosy Foxes")
 
 
@@ -37,7 +52,10 @@ def test_profile_rejects_empty_or_whitespace_name(invalid_name: str) -> None:
     """Profile names must contain at least one non-whitespace character."""
 
     # User-facing names still need meaningful content even though they are not identifiers.
-    with pytest.raises(ValueError, match="Profile name must not be empty or whitespace"):
+    with pytest.raises(
+        ValueError,
+        match=r"\AProfile name must not be empty or whitespace\.\Z",
+    ):
         RecommendationProfile(id="cosy-foxes", name=invalid_name)
 
 
@@ -58,7 +76,10 @@ def test_profile_accepts_threshold_boundaries(threshold: float) -> None:
 def test_profile_rejects_thresholds_outside_valid_range(threshold: float) -> None:
     """Recommendation thresholds outside the normalised score range should be rejected."""
 
-    with pytest.raises(ValueError, match="Threshold must be between 0.0 and 1.0"):
+    with pytest.raises(
+        ValueError,
+        match=r"\AThreshold must be between 0\.0 and 1\.0\.\Z",
+    ):
         RecommendationProfile(
             id="cosy-foxes",
             name="Cosy Foxes",
