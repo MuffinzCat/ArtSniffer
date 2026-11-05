@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from artsniffer.profiles.profile import RecommendationProfile
-from artsniffer.recommendation import RecommendationCandidate
+from artsniffer.recommendations.candidate import RecommendationCandidate
 
 
 class RecommendationEligibilityReason(StrEnum):

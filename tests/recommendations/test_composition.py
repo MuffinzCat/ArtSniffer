@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from artsniffer.recommendation_score import RecommendationScoreComponent
-from artsniffer.score_composition import compose_recommendation_score
+from artsniffer.recommendations.composition import compose_recommendation_score
+from artsniffer.recommendations.score import RecommendationScoreComponent
 
 
 def component(score: float, weight: float = 1.0, name: str = "c") -> RecommendationScoreComponent:

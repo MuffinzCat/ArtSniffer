@@ -4,8 +4,8 @@ import pytest
 
 from artsniffer.analysis.artwork import ArtworkAnalysis
 from artsniffer.profiles.reference import ProfileReferenceLink
+from artsniffer.recommendations.visual_scoring import calculate_visual_similarity_score
 from artsniffer.references.collection_artwork import CollectionArtworkLink
-from artsniffer.visual_scoring import calculate_visual_similarity_score
 
 
 def _reference_entry(

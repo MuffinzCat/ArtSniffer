@@ -2,8 +2,8 @@
 
 import pytest
 
-from artsniffer.recommendation import RecommendationCandidate
-from artsniffer.recommendation_score import RecommendationScoreComponent
+from artsniffer.recommendations.candidate import RecommendationCandidate
+from artsniffer.recommendations.score import RecommendationScoreComponent
 
 
 def test_recommendation_candidate_preserves_identifiers_and_score() -> None:

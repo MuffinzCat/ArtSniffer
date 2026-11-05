@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.recommendation_score import RecommendationScoreComponent
+from artsniffer.recommendations.score import RecommendationScoreComponent
 
 
 def test_score_component_preserves_name_score_and_default_weight() -> None:

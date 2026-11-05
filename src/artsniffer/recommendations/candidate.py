@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from math import isfinite
 
-from artsniffer.recommendation_score import RecommendationScoreComponent
+from artsniffer.recommendations.score import RecommendationScoreComponent
 
 
 @dataclass

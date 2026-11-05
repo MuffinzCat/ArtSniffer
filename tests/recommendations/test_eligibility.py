@@ -3,8 +3,8 @@
 import pytest
 
 from artsniffer.profiles.profile import RecommendationProfile
-from artsniffer.recommendation import RecommendationCandidate
-from artsniffer.recommendation_eligibility import (
+from artsniffer.recommendations.candidate import RecommendationCandidate
+from artsniffer.recommendations.eligibility import (
     RecommendationEligibilityDecision,
     RecommendationEligibilityReason,
     evaluate_recommendation_eligibility,

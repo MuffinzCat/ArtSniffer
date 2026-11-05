@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from math import fsum, isfinite
 
-from artsniffer.recommendation_score import RecommendationScoreComponent
+from artsniffer.recommendations.score import RecommendationScoreComponent
 
 
 def compose_recommendation_score(
