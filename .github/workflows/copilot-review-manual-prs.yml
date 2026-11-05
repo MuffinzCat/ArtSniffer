@@ -1,0 +1,55 @@
+name: Request Copilot review for manual-review pull requests
+
+on:
+  pull_request:
+    types:
+      - labeled
+
+concurrency:
+  group: copilot-review-manual-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  request-copilot-review:
+    if: >-
+      github.event.label.name == 'manual-review' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Request Copilot code review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          copilot_login="copilot-pull-request-reviewer[bot]"
+
+          # Separate assignments: a gh failure aborts the step (bash -e) instead of reading as "absent".
+          requested_logins="$(gh api --paginate \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers?per_page=100" \
+            --jq '.users[].login')"
+          review_logins="$(gh api --paginate \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${REPO}/pulls/${PR_NUMBER}/reviews?per_page=100" \
+            --jq '.[].user.login')"
+
+          if printf '%s\n' "$requested_logins" | grep -qxF "$copilot_login"; then
+            echo "Copilot review is already requested for PR #${PR_NUMBER}; nothing to do."
+            exit 0
+          fi
+          if printf '%s\n' "$review_logins" | grep -qxF "$copilot_login"; then
+            echo "Copilot has already reviewed PR #${PR_NUMBER}; nothing to do."
+            exit 0
+          fi
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
+            -f "reviewers[]=copilot-pull-request-reviewer[bot]"
