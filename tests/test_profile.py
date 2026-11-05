@@ -2,7 +2,13 @@
 
 import pytest
 
+from artsniffer.content_rating import ContentRating
 from artsniffer.profile import RecommendationProfile
+from artsniffer.profile_content_policy import (
+    ProfileContentPolicy,
+    ProfileContentPolicyMode,
+    default_profile_content_policy,
+)
 
 
 def test_profile_uses_required_values_and_defaults() -> None:
@@ -85,3 +91,40 @@ def test_profile_rejects_thresholds_outside_valid_range(threshold: float) -> Non
             name="Cosy Foxes",
             threshold=threshold,
         )
+
+
+def test_profile_defaults_to_general_max_rating_content_policy() -> None:
+    """Profiles without an explicit policy should use the safe GENERAL default."""
+
+    profile = RecommendationProfile(id="cosy-foxes", name="Cosy Foxes")
+
+    assert profile.content_policy == default_profile_content_policy()
+    assert profile.content_policy.mode is ProfileContentPolicyMode.MAX_RATING
+    assert profile.content_policy.max_rating is ContentRating.GENERAL
+
+
+def test_profiles_do_not_share_default_content_policy_instances() -> None:
+    """Each profile should receive its own default policy object."""
+
+    first = RecommendationProfile(id="first", name="First")
+    second = RecommendationProfile(id="second", name="Second")
+
+    assert first.content_policy == second.content_policy
+    assert first.content_policy is not second.content_policy
+
+
+@pytest.mark.parametrize(
+    "policy",
+    [
+        ProfileContentPolicy(ProfileContentPolicyMode.MAX_RATING, ContentRating.GENERAL),
+        ProfileContentPolicy(ProfileContentPolicyMode.MAX_RATING, ContentRating.MATURE),
+        ProfileContentPolicy(ProfileContentPolicyMode.MAX_RATING, ContentRating.ADULT),
+        ProfileContentPolicy(ProfileContentPolicyMode.ADULT_ONLY),
+    ],
+)
+def test_profile_preserves_explicit_content_policy(policy: ProfileContentPolicy) -> None:
+    """An explicitly supplied policy should be stored exactly as supplied."""
+
+    profile = RecommendationProfile(id="cosy-foxes", name="Cosy Foxes", content_policy=policy)
+
+    assert profile.content_policy is policy

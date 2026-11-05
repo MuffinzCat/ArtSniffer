@@ -1,4 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from artsniffer.profile_content_policy import (
+    ProfileContentPolicy,
+    default_profile_content_policy,
+)
 
 
 @dataclass
@@ -16,6 +21,9 @@ class RecommendationProfile:
     enabled: bool = True
     # Candidates must meet this minimum score to qualify for the profile.
     threshold: float = 0.75
+    # Declarative rating policy; each profile gets its own safe-default instance. It is not
+    # evaluated here, and adult support remains a separate service-level control.
+    content_policy: ProfileContentPolicy = field(default_factory=default_profile_content_policy)
 
     def __post_init__(self) -> None:
         """Validate profile configuration immediately after initialisation.
