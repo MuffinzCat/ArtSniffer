@@ -1,8 +1,58 @@
 """Tests for recommendation candidate eligibility."""
 
+import pytest
+
 from artsniffer.profile import RecommendationProfile
 from artsniffer.recommendation import RecommendationCandidate
-from artsniffer.recommendation_eligibility import is_recommendation_eligible
+from artsniffer.recommendation_eligibility import (
+    RecommendationEligibilityDecision,
+    RecommendationEligibilityReason,
+    evaluate_recommendation_eligibility,
+    is_recommendation_eligible,
+)
+
+
+@pytest.mark.parametrize(
+    ("enabled", "profile_id", "threshold", "candidate_profile_id", "score", "eligible", "reason"),
+    [
+        (True, "cosy-foxes", 0.75, "cosy-foxes", 0.75, True, "eligible"),
+        (False, "cosy-foxes", 0.75, "cosy-foxes", 0.9, False, "profile_disabled"),
+        (False, "cosy-foxes", 0.75, "quiet-birds", 0.9, False, "profile_disabled"),
+        (True, "cosy-foxes", 0.75, "quiet-birds", 0.9, False, "profile_mismatch"),
+        (True, "cosy-foxes", 0.75, "cosy-foxes", 0.74, False, "below_threshold"),
+        (True, "cosy-foxes", 0.0, "cosy-foxes", 0.0, True, "eligible"),
+        (True, "cosy-foxes", 1.0, "cosy-foxes", 1.0, True, "eligible"),
+    ],
+)
+def test_eligibility_decision_reports_stable_reason(
+    enabled: bool,
+    profile_id: str,
+    threshold: float,
+    candidate_profile_id: str,
+    score: float,
+    eligible: bool,
+    reason: str,
+) -> None:
+    """Eligibility decisions report the existing rule that determined the result."""
+    profile = RecommendationProfile(
+        id=profile_id,
+        name="Cosy Foxes",
+        enabled=enabled,
+        threshold=threshold,
+    )
+    candidate = RecommendationCandidate(
+        profile_id=candidate_profile_id,
+        artwork_id="artwork-001",
+        score=score,
+    )
+
+    decision = evaluate_recommendation_eligibility(profile, candidate)
+
+    assert decision == RecommendationEligibilityDecision(
+        eligible=eligible,
+        reason=RecommendationEligibilityReason(reason),
+    )
+    assert decision.reason.value == reason
 
 
 def test_eligible_candidate_above_profile_threshold() -> None:
