@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.content_rating import (
+from artsniffer.content.rating import (
     ContentRating,
     content_rating_rank,
     is_known_content_rating,

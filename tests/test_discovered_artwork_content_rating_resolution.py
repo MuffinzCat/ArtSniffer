@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.content_rating import ContentRating
+from artsniffer.content.rating import ContentRating
 from artsniffer.discovered_artwork import DiscoveredArtwork
 from artsniffer.discovered_artwork_content_rating import DiscoveredArtworkContentRating
 from artsniffer.discovered_artwork_content_rating_resolution import (

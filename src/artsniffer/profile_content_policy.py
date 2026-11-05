@@ -10,7 +10,7 @@ later policy-decision function.
 from dataclasses import dataclass
 from enum import StrEnum
 
-from artsniffer.content_rating import ContentRating
+from artsniffer.content.rating import ContentRating
 
 
 class ProfileContentPolicyMode(StrEnum):

@@ -9,7 +9,7 @@ adult-support enablement, source/provider normalisation, and destination eligibi
 from dataclasses import dataclass
 from enum import StrEnum
 
-from artsniffer.content_rating import ContentRating, content_rating_rank, is_known_content_rating
+from artsniffer.content.rating import ContentRating, content_rating_rank, is_known_content_rating
 from artsniffer.profile_content_policy import ProfileContentPolicy, ProfileContentPolicyMode
 
 

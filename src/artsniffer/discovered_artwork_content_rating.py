@@ -8,7 +8,7 @@ labels, semantic tags and prohibited-content safety decisions are separate conce
 
 from dataclasses import dataclass
 
-from artsniffer.content_rating import ContentRating
+from artsniffer.content.rating import ContentRating
 
 
 @dataclass(frozen=True)

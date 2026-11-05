@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.content_rating import ContentRating
+from artsniffer.content.rating import ContentRating
 from artsniffer.profile import RecommendationProfile
 from artsniffer.profile_content_policy import (
     ProfileContentPolicy,

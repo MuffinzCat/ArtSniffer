@@ -1,12 +1,12 @@
 import pytest
 
+from artsniffer.content.rating import ContentRating
 from artsniffer.content_policy import (
     ContentPolicyDecision,
     ContentPolicyReason,
     evaluate_content_policy,
     is_content_allowed,
 )
-from artsniffer.content_rating import ContentRating
 from artsniffer.profile_content_policy import ProfileContentPolicy, ProfileContentPolicyMode
 
 R = ContentPolicyReason
