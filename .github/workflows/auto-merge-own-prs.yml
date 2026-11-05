@@ -7,6 +7,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+      - unlabeled
 
 permissions:
   contents: write
@@ -18,6 +19,7 @@ jobs:
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.user.login == 'MuffinzCat' &&
       !github.event.pull_request.draft &&
+      !contains(github.event.pull_request.labels.*.name, 'manual-review') &&
       github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
     runs-on: ubuntu-latest
     steps:
