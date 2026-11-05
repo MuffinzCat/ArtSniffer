@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.artwork_analysis import ArtworkAnalysis
+from artsniffer.analysis.artwork import ArtworkAnalysis
 from artsniffer.profiles.profile import RecommendationProfile
 from artsniffer.profiles.reference import ProfileReferenceLink
 from artsniffer.reference_resolution import resolve_profile_references

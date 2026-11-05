@@ -3,7 +3,7 @@
 from collections import defaultdict
 from collections.abc import Sequence
 
-from artsniffer.artwork_analysis import ArtworkAnalysis
+from artsniffer.analysis.artwork import ArtworkAnalysis
 from artsniffer.profiles.profile import RecommendationProfile
 from artsniffer.profiles.reference import ProfileReferenceLink
 from artsniffer.references.collection import ReferenceCollection

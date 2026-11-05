@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.artwork_analysis import ArtworkAnalysis
+from artsniffer.analysis.artwork import ArtworkAnalysis
 
 
 def test_artwork_analysis_preserves_all_values() -> None:

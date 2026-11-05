@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.similarity import cosine_similarity
+from artsniffer.analysis.embedding_similarity import cosine_similarity
 
 
 def test_identical_vectors_have_similarity_one() -> None:
