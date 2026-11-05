@@ -1,6 +1,7 @@
 """Tests for the unconditional safety gate decision vocabulary."""
 
 import ast
+import sys
 from pathlib import Path
 
 import pytest
@@ -82,28 +83,37 @@ def test_safety_gate_decision_has_exactly_two_fields() -> None:
     assert len(decision.__dataclass_fields__) == 2
 
 
-def test_safety_module_imports_no_artsniffer_domain_package() -> None:
+def test_safety_module_imports_only_standard_library_modules() -> None:
     """Verify the safety decision module depends only on Python standard library."""
     decision_path = (
         Path(__file__).resolve().parents[2] / "src/artsniffer/safety/decision.py"
     )
     decision_ast = ast.parse(decision_path.read_text(encoding="utf-8"))
+    import_nodes = [
+        node
+        for node in ast.walk(decision_ast)
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+    ]
+    relative_imports = [
+        node for node in import_nodes if isinstance(node, ast.ImportFrom) and node.level > 0
+    ]
     imported_modules = [
         alias.name
-        for node in ast.walk(decision_ast)
+        for node in import_nodes
         if isinstance(node, ast.Import)
         for alias in node.names
     ] + [
         node.module
-        for node in ast.walk(decision_ast)
+        for node in import_nodes
         if isinstance(node, ast.ImportFrom) and node.module is not None
     ]
+    imported_top_level_modules = {
+        module.partition(".")[0] for module in imported_modules
+    }
+    non_standard_library_imports = imported_top_level_modules - sys.stdlib_module_names
 
-    artsniffer_imports = [
-        module
-        for module in imported_modules
-        if module == "artsniffer" or module.startswith("artsniffer.")
-    ]
-    assert not artsniffer_imports, (
-        f"Found artsniffer imports in safety.decision: {artsniffer_imports}"
+    assert not relative_imports, f"Found relative imports in safety.decision: {relative_imports}"
+    assert not non_standard_library_imports, (
+        "Found non-standard-library imports in safety.decision: "
+        f"{sorted(non_standard_library_imports)}"
     )
