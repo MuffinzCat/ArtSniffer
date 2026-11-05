@@ -3,12 +3,12 @@
 import pytest
 
 from artsniffer.artwork_analysis import ArtworkAnalysis
-from artsniffer.collection_artwork import CollectionArtworkLink
 from artsniffer.profiles.profile import RecommendationProfile
 from artsniffer.profiles.reference import ProfileReferenceLink
-from artsniffer.reference import ReferenceCollection
 from artsniffer.reference_resolution import resolve_profile_references
-from artsniffer.reference_source import ReferenceSource
+from artsniffer.references.collection import ReferenceCollection
+from artsniffer.references.collection_artwork import CollectionArtworkLink
+from artsniffer.references.source import ReferenceSource
 from artsniffer.visual_scoring import calculate_visual_similarity_score
 
 MODEL = "model-v1"

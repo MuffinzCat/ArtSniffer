@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.collection_artwork import CollectionArtworkLink
+from artsniffer.references.collection_artwork import CollectionArtworkLink
 
 
 def test_collection_artwork_link_uses_required_values_and_default_weight() -> None:

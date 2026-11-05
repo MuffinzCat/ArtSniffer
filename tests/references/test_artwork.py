@@ -2,7 +2,7 @@
 
 import pytest
 
-from artsniffer.artwork import ArtworkRecord
+from artsniffer.references.artwork import ArtworkRecord
 
 
 def test_artwork_record_preserves_all_fields() -> None:

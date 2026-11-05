@@ -3,9 +3,9 @@
 from math import isfinite
 
 from artsniffer.artwork_analysis import ArtworkAnalysis
-from artsniffer.collection_artwork import CollectionArtworkLink
 from artsniffer.profiles.reference import ProfileReferenceLink
 from artsniffer.recommendation_score import RecommendationScoreComponent
+from artsniffer.references.collection_artwork import CollectionArtworkLink
 from artsniffer.similarity import cosine_similarity
 
 type _ReferenceEntry = tuple[

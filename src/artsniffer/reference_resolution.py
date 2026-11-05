@@ -4,11 +4,11 @@ from collections import defaultdict
 from collections.abc import Sequence
 
 from artsniffer.artwork_analysis import ArtworkAnalysis
-from artsniffer.collection_artwork import CollectionArtworkLink
 from artsniffer.profiles.profile import RecommendationProfile
 from artsniffer.profiles.reference import ProfileReferenceLink
-from artsniffer.reference import ReferenceCollection
-from artsniffer.reference_source import ReferenceSource
+from artsniffer.references.collection import ReferenceCollection
+from artsniffer.references.collection_artwork import CollectionArtworkLink
+from artsniffer.references.source import ReferenceSource
 
 # Matches the entry shape accepted by calculate_visual_similarity_score.
 type ResolvedReferenceEntry = tuple[ArtworkAnalysis, ProfileReferenceLink, CollectionArtworkLink]

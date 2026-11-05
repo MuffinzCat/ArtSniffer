@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
-from artsniffer.artwork import ArtworkRecord
+from artsniffer.references.artwork import ArtworkRecord
 
 
 @dataclass(frozen=True)

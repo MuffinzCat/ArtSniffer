@@ -1,7 +1,7 @@
 import pytest
 
-from artsniffer.artwork import ArtworkRecord
-from artsniffer.reference_observation import (
+from artsniffer.references.artwork import ArtworkRecord
+from artsniffer.references.observation import (
     ReferenceItemChange,
     ReferenceItemChangeKind,
     ReferenceItemObservation,
