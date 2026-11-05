@@ -50,8 +50,7 @@ jobs:
 
   disable-auto-merge-for-manual-review:
     if: >-
-      github.event.action == 'labeled' &&
-      github.event.label.name == 'manual-review' &&
+      contains(github.event.pull_request.labels.*.name, 'manual-review') &&
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
     runs-on: ubuntu-latest
