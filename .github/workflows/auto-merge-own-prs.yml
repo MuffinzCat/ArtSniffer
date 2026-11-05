@@ -7,6 +7,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+      - labeled
       - unlabeled
 
 permissions:
@@ -28,3 +29,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --auto --squash "$PR_URL"
+
+  disable-auto-merge-for-manual-review:
+    if: >-
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'manual-review' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Disable auto-merge for manual review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --disable-auto "$PR_URL"
