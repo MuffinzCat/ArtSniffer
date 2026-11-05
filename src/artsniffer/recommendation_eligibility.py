@@ -1,7 +1,53 @@
 """Determine whether scored recommendation candidates qualify for a profile."""
 
+from dataclasses import dataclass
+from enum import StrEnum
+
 from artsniffer.profile import RecommendationProfile
 from artsniffer.recommendation import RecommendationCandidate
+
+
+class RecommendationEligibilityReason(StrEnum):
+    """Stable machine-readable reasons for a recommendation eligibility decision."""
+
+    ELIGIBLE = "eligible"
+    PROFILE_DISABLED = "profile_disabled"
+    PROFILE_MISMATCH = "profile_mismatch"
+    BELOW_THRESHOLD = "below_threshold"
+
+
+@dataclass(frozen=True)
+class RecommendationEligibilityDecision:
+    """Represent whether a candidate qualifies and the rule determining the result."""
+
+    eligible: bool
+    reason: RecommendationEligibilityReason
+
+
+def evaluate_recommendation_eligibility(
+    profile: RecommendationProfile,
+    candidate: RecommendationCandidate,
+) -> RecommendationEligibilityDecision:
+    """Return whether an enabled profile accepts a matching candidate's score and why."""
+    if not profile.enabled:
+        return RecommendationEligibilityDecision(
+            eligible=False,
+            reason=RecommendationEligibilityReason.PROFILE_DISABLED,
+        )
+    if candidate.profile_id != profile.id:
+        return RecommendationEligibilityDecision(
+            eligible=False,
+            reason=RecommendationEligibilityReason.PROFILE_MISMATCH,
+        )
+    if candidate.score < profile.threshold:
+        return RecommendationEligibilityDecision(
+            eligible=False,
+            reason=RecommendationEligibilityReason.BELOW_THRESHOLD,
+        )
+    return RecommendationEligibilityDecision(
+        eligible=True,
+        reason=RecommendationEligibilityReason.ELIGIBLE,
+    )
 
 
 def is_recommendation_eligible(
@@ -9,8 +55,4 @@ def is_recommendation_eligible(
     candidate: RecommendationCandidate,
 ) -> bool:
     """Return whether an enabled profile accepts this matching candidate's score."""
-    return (
-        profile.enabled
-        and candidate.profile_id == profile.id
-        and candidate.score >= profile.threshold
-    )
+    return evaluate_recommendation_eligibility(profile, candidate).eligible
