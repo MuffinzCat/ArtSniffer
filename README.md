@@ -10,6 +10,43 @@ ArtSniffer is currently in early development.
 
 The initial project foundation is being built before work begins on reference-library integration, artwork analysis, recommendation profiles, source monitoring, and delivery services.
 
+## Current Domain Boundaries
+
+The current domain primitives include subject-bound unconditional safety evaluation, profile
+content-policy evaluation, service-level content permissions, analysis records and recommendation
+scoring. They do not yet form an application pipeline.
+
+`ServiceContentPermissions()` disables adult content by default. Its pure evaluator uses the
+provider-neutral `ContentRating` vocabulary:
+
+| Rating | Adult support disabled (default) | Adult support explicitly enabled |
+|---|---|---|
+| `UNKNOWN` | Rejected | Rejected |
+| `GENERAL` | Permitted by the service | Permitted by the service |
+| `MATURE` | Permitted by the service | Permitted by the service |
+| `ADULT` | Rejected | Permitted by the service |
+
+Service permissions are separate from profile preferences. A general profile still rejects MATURE
+and ADULT, and a profile accepting ADULT does not enable service-wide adult support. Neither rating
+policy can override unconditional safety or grant destination eligibility.
+
+The intended processing order is:
+
+```text
+source metadata / labels -> unconditional safety -> service-level permissions
+-> profile content policy -> expensive analysis -> recommendation scoring
+-> recommendation eligibility -> destination eligibility -> delivery
+```
+
+Only an affirmative bound safety result exposes a `SafetyClearedSubject`. A future composed
+pre-analysis boundary should require that clearance, preserve its artwork/content-version binding,
+and stop on service rejection before evaluating profile policy. The standalone service and profile
+evaluators are pure rating rules, not subject-bound authorisation to process content.
+
+Gate composition and an analysis execution entry point are not implemented yet, so the intended
+pipeline order is not yet enforced. Service permissions are only the first part of issue #36.
+Full adult compliance, destination opt-in and platform-specific eligibility remain later work.
+
 ## Planned Features
 
 ArtSniffer is planned to support:
