@@ -4,7 +4,9 @@ This package represents the domain where content is rejected unconditionally by 
 
 Safety evidence and gate decisions are distinct from content ratings, raw moderation labels,
 and semantic traits. Profile configuration cannot override a safety rejection. Evidence is
-an unverified claim, not a decision or a verified artwork binding. Pure evidence evaluation
-uses independently supplied authority grants and fails closed without authorised clearance.
-Subject and content-version binding remain deferred.
+an unverified claim until evaluated with independently supplied authority grants. The
+binding-aware evaluator requires every supplied binding to structurally match the requested
+artwork and content version, then returns a decision bound to that subject and criteria set.
+Binding authenticity remains the caller's responsibility. Only a cleared result exposes a
+SafetyClearedSubject for downstream use.
 """
