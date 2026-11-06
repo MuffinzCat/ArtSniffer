@@ -27,9 +27,7 @@ class SQLiteAnalysisCache:
                 """
             )
 
-    def get(
-        self, artwork_id: str, content_hash: str, model_id: str
-    ) -> ArtworkAnalysis | None:
+    def get(self, artwork_id: str, content_hash: str, model_id: str) -> ArtworkAnalysis | None:
         """Return analysis only for an exact artwork, content, and model version match."""
         row = self._connection.execute(
             """
