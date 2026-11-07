@@ -22,3 +22,12 @@ class BenchmarkAnalysis:
     artwork_id: str
     analysis: ArtworkAnalysis
     elapsed_seconds: float
+
+
+@dataclass
+class BenchmarkComparison:
+    """Identify a manifest-selected query and its expected strong and weak matches."""
+
+    query_artwork_id: str
+    strong_expected_match_id: str
+    weak_expected_match_id: str
