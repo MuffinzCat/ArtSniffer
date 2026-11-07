@@ -208,6 +208,9 @@ tempCodeRunnerFile.py
 # Ruff stuff:
 .ruff_cache/
 
+# Private benchmark artwork and generated results
+benchmark-data/
+
 # PyPI configuration file
 .pypirc
 
