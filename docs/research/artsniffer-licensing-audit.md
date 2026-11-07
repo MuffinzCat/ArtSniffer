@@ -10,19 +10,22 @@ does not grant permission to use ArtSniffer.
 
 ## Executive recommendation
 
-The clarified rule is **free of charge for everyone**: nobody, including the owner, may charge for
-ArtSniffer itself or a version that remains fundamentally ArtSniffer. This is not a noncommercial-
-use requirement. The owner affirmatively permits ordinary commercial and internal use, including
-use by people or organisations that earn money through other activities.
+The clarified owner policy is broader than a zero purchase price: **nobody, including the owner,
+should profit specifically from ArtSniffer, a fundamentally ArtSniffer-derived fork, or
+ArtSniffer-specific goods or services.** This is not a general noncommercial-use requirement.
+Genuinely independent commercial activity remains allowed, including business-internal use,
+ordinary paid employment, independently valuable media and products, and generic paid
+infrastructure. The owner's examples and boundaries are recorded below as policy intent only.
 
 **No established, professionally drafted software licence reviewed here clearly and accurately
-guarantees this exact rule. Do not adopt PolyForm Noncommercial, Commons Clause, or another
-near-match as if it did.** Apache-2.0 plus Commons Clause is the closest to restricting paid
+guarantees this broader no-profit policy. Do not adopt PolyForm Noncommercial, Commons Clause, or
+another near-match as if it did.** Apache-2.0 plus Commons Clause comes closest to restricting paid
 provision of software and substantially ArtSniffer-derived services while allowing commercial
-internal use. But its official FAQ deliberately permits selling value-added products and derivatives,
+internal use, but it does not clearly cover every ArtSniffer-specific revenue stream in the owner's
+examples. Its official FAQ deliberately permits selling value-added products and derivatives,
 leaving a material boundary around heavily modified forks. It also leaves the copyright holder free
 to offer separate licences. PolyForm Perimeter and Elastic License 2.0 restrict competition or
-hosted access, not all charging for the software. Ordinary open-source copyleft licences preserve
+hosted access, not all ArtSniffer-specific profit. Ordinary open-source copyleft licences preserve
 the ability to charge.
 
 No licence file or licensing metadata has been changed. Keep the current all-rights-reserved state,
@@ -33,37 +36,66 @@ invent a custom licence or misstate a near-match.
 
 ## Owner's stated goals
 
-The clarified governing principle is:
+Nobody, including MuffinzCat, should profit specifically from ArtSniffer, a fundamentally
+ArtSniffer-derived fork, or ArtSniffer-specific goods or services. This broader principle is the
+owner's policy intent, not adopted licence language or a conclusion that anyone is legally bound by
+it. It is not a ban on commercial use or on making money from activity that is genuinely independent
+of ArtSniffer.
 
-> **Nobody may charge money for ArtSniffer itself or an ArtSniffer fork/derivative that remains
-> fundamentally ArtSniffer. ArtSniffer and its forks should remain free of charge for everyone,
-> including MuffinzCat.**
+The owner intends to allow:
 
-People and organisations should be able to download and use ArtSniffer, run it personally or
-internally in a business, self-host it, inspect/modify/fork it, redistribute originals and
-modified versions, contribute changes, build integrations and use it in research or otherwise
-commercial activities. This includes an artist earning income from art, a business using the
-software internally, and customers independently installing it on ordinary paid VPS/cloud
-infrastructure.
+- Free access, use, modification, forking and redistribution, with no strings attached to optional
+  donations or tips. Access, features, updates, support or other benefits must not depend on giving.
+- A free-fork maintainer linking to their website or donation page; a community or Discord that
+  distributes or discusses free ArtSniffer/forks accepting genuinely optional donations; and
+  non-profit or at-cost sharing of actual infrastructure expenses, such as splitting a shared
+  instance's VPS bill. Nobody may profit from the cost-sharing, and it must not disguise a service
+  fee.
+- Ordinary paid employment, including a company using ArtSniffer internally and an employee working
+  on or contributing to it during normally paid work time. Ordinary salary is not prohibited merely
+  because some work concerns ArtSniffer.
+- Monetised independent media about ArtSniffer, such as ordinary videos, livestreams, reviews,
+  journalism or articles. A publication may include coverage behind its general paywall when the
+  publication itself has independent value; the paid product must not be ArtSniffer or an
+  ArtSniffer-specific service.
+- Commercial products and services that interoperate with ArtSniffer and have substantial
+  independent value, provided "integration" is not a pretext for selling something whose value
+  substantially consists of ArtSniffer.
+- Normal charges by generic VPS, cloud and infrastructure providers for CPU, RAM, storage and other
+  generic resources used to run ArtSniffer; ordinary commercial hardware with ArtSniffer preinstalled
+  at no additional ArtSniffer-specific charge or price premium; and ordinary app-store, account or
+  distribution costs incurred by a developer/distributor while giving the software to users free.
 
-The restriction is about **charging for ArtSniffer or the fundamentally ArtSniffer-derived
-application**, not making money while using it. It is intended to prohibit a purchase/download/
-licence fee, subscription or paywall for ArtSniffer, paid hosted access to ArtSniffer itself,
-premium ArtSniffer, rebranding/minor changes to evade the rule, and fees for modifications or
-features in a fork that still amounts to ArtSniffer. A different name, user interface, packaging,
-deployment, or added features is not intended by itself to permit charging.
+The owner intends to prohibit:
 
-Conversely, generic infrastructure or hosting resources, paid hardware capable of running it,
-unrelated software interoperating with it, commercial internal use, and products/services whose
-value does not consist substantially of providing ArtSniffer should generally remain possible.
-This statement is the owner's intent, not a licence test or legal conclusion.
+- Selling ArtSniffer or a fundamentally ArtSniffer-derived fork, and required download/licence fees,
+  subscriptions, paywalls, premium tiers, paid features or in-app purchases tied to it.
+- Advertising inside ArtSniffer or a fundamentally ArtSniffer-derived fork, including advertising
+  used only to recover costs, and sponsorship in exchange for promotion, acknowledgement, placement
+  or other commercial consideration. The owner distinguishes these from no-strings-attached gifts.
+- Paid installation, configuration, ArtSniffer-specific support/help, or for-profit managed hosting
+  or hosted access. Renaming a payment as setup, convenience, service or another fee does not make
+  it acceptable when it effectively monetises ArtSniffer.
+- Development bounties, commissioned ArtSniffer development or other payment specifically in
+  exchange for implementing ArtSniffer features/work.
+- Selling project/fork-branded merchandise whose commercial value derives from the project, or
+  paid courses, training packages, guides, ebooks or similar products created specifically to
+  monetise ArtSniffer.
+- An ArtSniffer-specific premium on otherwise ordinary hardware, including an "ArtSniffer Edition"
+  whose higher price derives from ArtSniffer, or use of a larger wrapper/integration as a loophole
+  when the paid product's value substantially consists of ArtSniffer.
 
-The owner does not intend a special right to sell commercial licences or charge for the software
-personally. This condition on the owner is a distinct difficulty: ordinary non-exclusive software
-licences grant rights to recipients while the copyright holder retains ownership and separate
-licensing authority. A licence's restriction on licensees does not, by itself, bind its own
-licensor. A public promise that the owner also will never charge/issue an exception may need a
-separately enforceable legal mechanism; standard texts reviewed here do not establish that result.
+A genuinely independent commercial activity does not become prohibited merely because ArtSniffer
+is used, discussed, supported by ordinary employment, interoperated with or installed on generic
+paid infrastructure. A genuinely voluntary gift is different from payment in exchange for
+ArtSniffer-related access, work, services, promotion or benefits. These examples express the owner's
+intent; they do not supply a legal definition of profit, a licence test, or enforceable terms.
+
+The owner does not intend a special right to monetise ArtSniffer personally or grant an exception
+for their own benefit. Binding the owner and future rights-holders is a distinct legal problem:
+ordinary non-exclusive software licences grant rights to recipients while the copyright holder
+retains ownership and separate licensing authority. A licence restriction on recipients does not,
+by itself, bind its licensor, and this report does not create an enforceable owner covenant.
 
 ## Scope, method and limitations
 
@@ -227,15 +259,17 @@ these platform permissions from a price charged specifically for ArtSniffer or i
 
 ## Candidate comparison
 
-The central distinction is between a use that is commercial and a charge for the software itself.
-The owner's policy permits the former (including business-internal use) and prohibits the latter,
-including for fundamentally ArtSniffer-derived forks. "Free of charge" is not synonymous with
-"noncommercial", "source-available", or "open source".
+The central distinction is between genuinely independent commercial activity and profit specifically
+derived from ArtSniffer or ArtSniffer-specific goods/services. The owner's policy permits the former
+(including business-internal use) and prohibits the latter, subject to the stated exceptions for
+optional gifts and non-profit reimbursement of genuine costs. It is broader than a ban on charging
+for copies. "No profit from ArtSniffer" is not synonymous with "noncommercial", "source-available",
+or "open source".
 
 | Candidate | Free download, modify and redistribute? | Commercial/internal use? | Sale/access restriction and modified forks | Fit |
 |---|---|---|---|---|
 | **PolyForm Noncommercial 1.0.0** | Yes for permitted purposes, with notices. | **Generally no** for ordinary commercial purposes. Personal activity must lack anticipated commercial application; listed organisations have a special carve-out regardless of funding. | Purpose-based, not a simple no-price rule. Separate distribution grant does not restate a noncommercial condition. No clear guarantee against selling every copy. | Too restrictive on business use and does not clearly impose the intended price condition. Do not recommend. |
-| **Apache-2.0 + Commons Clause v1.0** | Yes, subject to base/condition notices and Apache obligations. | **Yes.** Commercial internal use is generally allowed; the Sell definition concerns provision to third parties for consideration. | Prohibits charging for a product/service whose value derives entirely or substantially from the software's functionality, expressly including qualifying hosting/support. The official FAQ also says value-added derivatives/products may be sold. Whether a heavily modified but still fundamentally ArtSniffer fork always crosses the "substantially" line is not guaranteed. | **Closest on paid commercial provision while allowing internal use**, but not a dependable no-charge condition for every ArtSniffer-derived fork. Does not bind licensor to no-charge policy. Source-available, not OSI open source. |
+| **Apache-2.0 + Commons Clause v1.0** | Yes, subject to base/condition notices and Apache obligations. | **Yes.** Commercial internal use is generally allowed; the Sell definition concerns provision to third parties for consideration. | Prohibits charging for a product/service whose value derives entirely or substantially from the software's functionality, expressly including qualifying hosting/support. The official FAQ also says value-added derivatives/products may be sold. It does not clearly prohibit all ArtSniffer-specific monetisation (for example, promotion-for-sponsorship, project merchandise or paid media/training) or guarantee the broader fork boundary. | **Closest on restricting paid provision while allowing internal use**, but not a dependable no-profit condition for ArtSniffer-specific goods/services or every fundamentally-derived fork. Does not bind licensor to the policy. Source-available, not OSI open source. |
 | **PolyForm Perimeter 1.0.1** | Copying, modification and redistribution are granted with notices, for permitted purposes. | Internal business use is generally permitted. | Forbids providing others any product that competes with the software, whether free or paid and regardless of interface/deployment. This can bar free competitive forks/services, while it is a competition restriction rather than a no-charge rule. No Other Rights permits the licensor to grant others rights. | Wrong axis: over-restricts free competing provision, and does not ensure the owner or every fork stays free. Source-available. |
 | **Elastic License 2.0** | Grants use, copying, distribution and derivative works with notices. | **Yes**, including internal business use. | Prohibits substantial hosted/managed access, but does not generally prohibit selling copies or charging for a fork. Its patent grant explicitly contemplates sale subject to limitations. | Hosted-access restriction, not a free-of-charge licence. Source-available. |
 | **Redis Source Available License v2 (RSALv2)** | Grants use/copy/distribution/derivatives subject to conditions. | Yes, including internal commercial use. | Restricts making functionality of original or modified version available to third parties as a service or through distribution; not a price-only rule. Patent grant expressly references sale, subject to limitations. It can block free third-party service/distribution and does not forbid all paid copies as such. | Too restrictive on free provision and does not encode the desired no-charge boundary. Source-available. |
@@ -243,9 +277,13 @@ including for fundamentally ArtSniffer-derived forks. "Free of charge" is not sy
 | **GPL/AGPL (including strong copyleft)** | Yes; modified covered code must be redistributed under the same freedoms/terms, subject to each licence. | **Yes.** Commercial internal and external uses are allowed. | Copyleft preserves downstream rights/source obligations, not a no-price rule. The GPL expressly permits charging any price for copies; paid SaaS is not generally prohibited by GPL, and AGPL's network source obligation is not a ban on charging. | Preserves forks' licence freedoms but explicitly fails the no-charge requirement. OSI open source. |
 | **MIT / Apache-2.0 / MPL-2.0** | Yes. | Yes. | Permit commercial distribution/sale; MPL copyleft requires source for covered files on distribution but does not prohibit a fee. | Fail the price rule. OSI open source. |
 
-No candidate evaluated is recommended as exactly satisfying the clarified owner intent. Standard
-source-available terms that restrict competition or hosted access are not equivalent to a
-no-charge rule, and open-source copyleft rules expressly preserve commercial sale.
+No candidate evaluated is recommended as exactly satisfying the clarified owner intent. In
+particular, the gap is not merely the sale of copies: the policy also addresses advertising,
+sponsorship, paid ArtSniffer-specific work and services, branded goods, and purpose-made educational
+products, while carving out independent media/business, genuinely optional gifts and at-cost
+infrastructure sharing. Standard source-available terms that restrict competition or hosted access
+are not equivalent to this no-profit rule, and open-source copyleft rules expressly preserve
+commercial sale.
 
 ### PolyForm Noncommercial: why not
 
@@ -295,23 +333,31 @@ This fits several examples: an ordinary paid VPS is not by itself a product whos
 substantially derives from ArtSniffer; a company can generally run the software internally; and a
 genuinely unrelated commercial product is not barred merely for interoperability. A paid hosted
 ArtSniffer service, repackaged copy, or lightly changed fork would likely fall within the intended
-Sell restriction where its value remains substantially ArtSniffer functionality.
+Sell restriction where its value remains substantially ArtSniffer functionality. The owner's
+at-cost cost-sharing example also is not profit or consideration beyond actual shared expenses.
 
-It does **not** reliably promise the stronger fork rule. The official FAQ explicitly permits
-selling derivatives/products when value is added. There is no objective threshold that guarantees
-that a substantially modified but "fundamentally ArtSniffer" application remains substantially the
-licensed Software as a matter of every fact pattern. The clause's focus is charging third parties,
-not making a copy available free of charge; it is not a share-alike condition requiring all
-ArtSniffer-derived work to remain under the condition.
+It does **not** reliably promise the broader policy. The official FAQ explicitly permits selling
+derivatives/products when value is added. There is no objective threshold that guarantees that a
+substantially modified but "fundamentally ArtSniffer" application remains substantially the licensed
+Software as a matter of every fact pattern. Its Sell test concerns providing a product/service to
+third parties for consideration; it does not clearly reach every profit stream identified by the
+owner, such as sponsorship in exchange for promotion, advertising inside the application,
+ArtSniffer-branded merchandise, development bounties or purpose-made training products. The FAQ's
+allowance for value-added derivatives and consulting also makes the boundary for paid
+ArtSniffer-specific support/work uncertain. The clause is not a share-alike condition requiring all
+ArtSniffer-derived work to remain under it.
 
 For the owner's examples, personal/research use, modification, free redistribution and business
 internal use are generally permitted. Paid hosting/access to ArtSniffer itself is within the
 restricted category when its value is substantially ArtSniffer functionality; a generic VPS
-provider or unrelated product is not barred merely for making infrastructure or interoperating
-software available. Fees for related hosting/consulting/support are named, but the substantial-
-value test still applies; the official FAQ permits consulting and value-added products in some
-cases. Modified copies may be redistributed, but charging for them is prohibited only when they
-meet the Sell test, not by an express downstream no-fee/share-alike rule.
+provider or independently valuable product is not barred merely for making infrastructure or
+interoperating software available. Genuine optional donations and reimbursement limited to actual
+shared costs are distinct from profit. Fees for related hosting/consulting/support are named, but
+the substantial-value test still applies; the official FAQ permits consulting and value-added
+products in some cases. Modified copies may be redistributed, but charging for them is prohibited
+only when they meet the Sell test, not by an express downstream no-fee/share-alike rule. The
+condition does not establish a general ban on advertising, sponsorship, project-branded goods,
+paid media/training or paid development specifically concerning ArtSniffer.
 
 Apache-2.0 requires its licence and relevant copyright/attribution notices to be retained and
 modified files to note changes; the Commons Clause condition must also accompany the licence
@@ -327,8 +373,9 @@ commercial terms for rights it owns. The official Commons Clause was designed to
 negotiate for prohibited sales. It therefore conflicts with the owner's explicit no-special-
 licence/no-owner-sale principle unless a separate enforceable commitment addresses it.
 
-Do not adopt Apache + Commons Clause while describing it as guaranteeing that every fundamentally
-ArtSniffer-derived fork remains free or that MuffinzCat can never charge for ArtSniffer.
+Do not adopt Apache + Commons Clause while describing it as guaranteeing no profit from every
+ArtSniffer-specific good/service, that every fundamentally ArtSniffer-derived fork remains free, or
+that MuffinzCat can never monetise ArtSniffer.
 
 ### Other near-matches and OSI boundary
 
@@ -355,12 +402,13 @@ sale. A licence prohibiting anyone from charging for ArtSniffer or its derivativ
 cannot be OSI open source. Any accurate model with the intended price restriction would be
 **source-available, not OSI open source**.
 
-This audit found no established candidate that simultaneously: (1) permits commercial/internal
-use; (2) permits modification and redistribution; (3) forbids all charges for original and
-fundamentally ArtSniffer-derived applications, including qualifying forks; and (4) binds the owner
-to the same no-charge rule. These conditions do not establish that no such text exists anywhere;
+This audit found no established candidate that simultaneously: (1) permits independent
+commercial/internal use; (2) permits modification and redistribution; (3) prohibits profit
+specifically from ArtSniffer, fundamentally ArtSniffer-derived forks, and ArtSniffer-specific goods
+or services while preserving the stated independent-activity and at-cost exceptions; and (4) binds
+the owner to the same policy. These conditions do not establish that no such text exists anywhere;
 they mean no reviewed professional standard has been verified as a clear match. Do not patch a
-standard text or invent a "no charge" addendum to force a fit.
+standard text or invent an informal "no profit" addendum to force a fit.
 
 ## Dependency and redistribution compatibility
 
@@ -521,19 +569,22 @@ ArtSniffer-owned source.
 
 The owner/legal reviewer should resolve:
 
-1. Whether to commission professional legal/licensing review of a purpose-built condition and
-   owner commitment. The condition must distinguish charging for ArtSniffer/fundamentally
-   ArtSniffer-derived applications from commercial use, generic infrastructure, hardware,
-   unrelated integrations and separately valuable products. "Fundamentally ArtSniffer" needs a
-   legally workable boundary that resists relabelling while not capturing unrelated works.
+1. Commission professional legal/licensing review before translating the broader no-profit policy
+   into enforceable terms. Any reviewed approach must distinguish profit specifically derived from
+   ArtSniffer/fundamentally ArtSniffer-derived forks and ArtSniffer-specific goods/services from
+   independent commercial activity, including generic infrastructure, hardware, separately valuable
+   integrations and independent media. It also needs workable boundaries for the owner's exceptions:
+   genuinely optional donations, non-profit reimbursement of actual costs, ordinary employment,
+   independent media and products, at-cost preinstallation/distribution, advertising/sponsorship,
+   development work and ArtSniffer-specific goods/services. "Fundamentally ArtSniffer" and "profit"
+   need legally workable definitions that resist relabelling without capturing unrelated activity.
 2. How the owner can be bound by the same no-charge rule. Standard non-exclusive licences normally
    govern recipients' exercise of licensed rights, not the copyright holder's retained rights.
    Consider enforceability, irrevocability, future owners and whether a public covenant or another
    legal structure is needed. A statement of intent alone may not bind a future rights-holder.
-3. Whether "charging for ArtSniffer" includes donations, sponsorship, ads, pass-through costs,
-   paid installation/maintenance, consulting, service-level commitments or hosting where users
-   cannot access the software itself; preserve the owner's examples rather than defaulting to
-   "no commercial use."
+3. How to distinguish a genuinely voluntary gift or reimbursement of actual costs from payment for
+   access, features, support, work, services, promotion or other benefits. Preserve the clarified
+   allowance for non-profit cost sharing; it must not become disguised profit or a service fee.
 4. The copyright holder's identity/authority, any employer/client rights, contributor permissions,
    code-reference/snippet provenance and any earlier private/public grants not in Git. Future
    contributor terms must be compatible with the same downstream no-charge/fork policy; a DCO or
@@ -549,11 +600,11 @@ professionally prepared legal terms and review contributor/ownership authority b
 the scope/date and earlier-grant implications.
 
 No licence adopted now means the source remains under the observed all-rights-reserved notice,
-subject to law, GitHub terms and existing permissions; the intended free-use permissions are not
-implemented. If the eventual restriction is imposed by licence, it is **source-available, not OSI
-open source** because it forbids charging for copies/derivatives. It should permit commercial and
-internal use otherwise, subject only to the clearly scoped charge prohibition. This report does
-not imply that anyone (including the owner) is already bound by a future no-charge condition.
+subject to law, GitHub terms and existing permissions; the intended permissions and no-profit policy
+are not implemented or legally established by this report. If an eventual enforceable condition
+prohibits profit from ArtSniffer and its derivatives, it would be **source-available, not OSI open
+source**. It should preserve the owner's stated independent commercial-use exceptions. This report
+does not imply that anyone (including the owner) is already bound by the policy or future terms.
 
 ## Official and authoritative sources
 
