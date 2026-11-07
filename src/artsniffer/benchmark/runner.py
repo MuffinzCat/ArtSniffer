@@ -1,29 +1,9 @@
 """Provider-neutral timing of image analysers over benchmark images."""
 
-from dataclasses import dataclass
-from pathlib import Path
 from time import perf_counter
 
-from artsniffer.analysis.artwork import ArtworkAnalysis
 from artsniffer.analysis.image_analyser import ImageAnalyser
-
-
-@dataclass
-class BenchmarkImage:
-    """Identify an artwork and the image to analyse."""
-
-    artwork_id: str
-    image_path: Path
-
-
-@dataclass
-class BenchmarkAnalysis:
-    """Store an analysis and the time taken to produce it."""
-
-    model_id: str
-    artwork_id: str
-    analysis: ArtworkAnalysis
-    elapsed_seconds: float
+from artsniffer.benchmark.models import BenchmarkAnalysis, BenchmarkImage
 
 
 def benchmark_image(analyser: ImageAnalyser, benchmark_image: BenchmarkImage) -> BenchmarkAnalysis:

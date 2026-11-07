@@ -4,11 +4,10 @@ from pathlib import Path
 
 import pytest
 
-import artsniffer.analysis.benchmark as benchmark
+import artsniffer.benchmark.runner as benchmark
 from artsniffer.analysis.artwork import ArtworkAnalysis
-from artsniffer.analysis.benchmark import (
-    BenchmarkAnalysis,
-    BenchmarkImage,
+from artsniffer.benchmark.models import BenchmarkAnalysis, BenchmarkImage
+from artsniffer.benchmark.runner import (
     benchmark_analysers,
     benchmark_image,
     benchmark_images,

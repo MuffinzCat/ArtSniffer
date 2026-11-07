@@ -77,6 +77,16 @@ Development uses:
 - Pyright for static type checking.
 - pytest for automated testing.
 
+## Local Benchmarks
+
+Provider-neutral benchmark records live in `artsniffer.benchmark.models`, and timing runners live
+in `artsniffer.benchmark.runner`. Production image analysers remain in `artsniffer.analysis`.
+
+Keep local benchmark artwork in `benchmark-data/images/` with its original filenames, and keep
+generated benchmark results within `benchmark-data/` too. Git ignores `benchmark-data/` directories
+at any depth; artwork and results must never be committed. No `dataset.toml` format is defined yet.
+Issue #62 tracks the broader multi-model furry-art benchmark.
+
 ## Copyright and Usage
 
 Copyright © 2026 Muffin. All rights reserved.
