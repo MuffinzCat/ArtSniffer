@@ -87,6 +87,11 @@ generated benchmark results within `benchmark-data/` too. Git ignores `benchmark
 at any depth; artwork and results must never be committed. No `dataset.toml` format is defined yet.
 Issue #62 tracks the broader multi-model furry-art benchmark.
 
+The DINOv2 analyser uses `facebook/dinov2-small` and requires the optional `benchmark-dinov2`
+dependency group. Run its tests with `uv run --group benchmark-dinov2 pytest` (or select that group
+for the other development checks). Tests mock model loading and image access; they do not download
+weights or read benchmark artwork. Constructing the real analyser may download uncached model files.
+
 ## Copyright and Usage
 
 Copyright © 2026 Muffin. All rights reserved.
