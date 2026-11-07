@@ -123,7 +123,7 @@ Main's Git author summary is:
 | Recorded identity | Main commits | Interpretation / limit |
 |---|---:|---|
 | Muffin, GitHub noreply address for account ID 33560694 | 51 | Account associated with MuffinzCat; appears to be the owner. |
-| Muffin, non-noreply address | 1 | Initial commit; GitHub commit API associates it with MuffinzCat. No personal address is reproduced here. |
+| Muffin, non-noreply address | 1 | Python foundation commit (`9c4bc2b`); GitHub commit API associates it with MuffinzCat. No personal address is reproduced here. |
 | Copilot, bot-associated identity | 1 | SQLite cache change, merged as [#59](https://github.com/MuffinzCat/ArtSniffer/pull/59). Includes owner and bot co-author trailers. |
 
 Across fetched refs, additional `MuffinzCat` author-name variants use the same account ID, and
