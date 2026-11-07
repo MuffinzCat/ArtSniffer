@@ -1,0 +1,95 @@
+name: Ruff Formatting Assist
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-formatting-patch:
+    if: >-
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer' &&
+      github.event.pull_request.head.ref != 'main' &&
+      (
+        github.event.pull_request.user.login == 'MuffinzCat' ||
+        github.event.pull_request.user.login == 'app/copilot-swe-agent'
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install locked development tools without installing the project
+        run: uv sync --locked --only-group dev --no-install-project
+
+      - name: Create Ruff formatting patch
+        id: format
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -n "$(git status --porcelain --untracked-files=all)" ]; then
+            echo "Checkout is not clean before formatting; refusing to produce a patch."
+            exit 1
+          fi
+
+          if uv run --no-sync ruff format --check .; then
+            echo "No Ruff formatting changes are required."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          uv run --no-sync ruff format .
+
+          if git diff --quiet; then
+            echo "Formatting check failed, but Ruff changed no tracked files."
+            exit 1
+          fi
+
+          uv run --no-sync ruff format --check .
+
+          mapfile -d '' -t changed_files < <(git diff --name-only -z)
+          for file in "${changed_files[@]}"; do
+            case "$file" in
+              *.py|*.pyi) ;;
+              *)
+                echo "Ruff changed an unexpected file: $file"
+                exit 1
+                ;;
+            esac
+          done
+
+          git diff --binary > ruff-format.patch
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # GITHUB_TOKEN pushes do not trigger pull_request validation; workflow_dispatch checks
+      # cannot satisfy required PR checks. Keep this helper read-only and avoid a push loop.
+      - name: Upload Ruff formatting patch
+        if: steps.format.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruff-format-patch
+          path: ruff-format.patch
+          if-no-files-found: error
+          retention-days: 7
