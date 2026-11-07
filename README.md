@@ -47,6 +47,17 @@ Gate composition and an analysis execution entry point are not implemented yet, 
 pipeline order is not yet enforced. Service permissions are only the first part of issue #36.
 Full adult compliance, destination opt-in and platform-specific eligibility remain later work.
 
+## Planned Recommendation Signals
+
+Global whole-image embeddings are one complementary signal for visual, style and composition
+similarity; they are not enough to capture component-level furry semantics such as characters,
+interactions, species, clothing or pose. Furry-specific semantic analysis is another signal.
+Authoritative source metadata (especially e621/e926 tags) remains distinct from generated concepts,
+which retain model, version and confidence provenance. The intended architecture maps these inputs
+to provider-neutral canonical traits and signals for separately explainable visual and semantic
+scoring. Semantic analysis does not grant unconditional safety clearance. These semantic and
+canonical-trait capabilities are planned, not yet implemented.
+
 ## Planned Features
 
 ArtSniffer is planned to support:
