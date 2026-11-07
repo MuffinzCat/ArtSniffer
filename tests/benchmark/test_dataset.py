@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from artsniffer.benchmark.dataset import load_benchmark_images
-from artsniffer.benchmark.models import BenchmarkImage
+from artsniffer.benchmark.dataset import load_benchmark_comparisons, load_benchmark_images
+from artsniffer.benchmark.models import BenchmarkComparison, BenchmarkImage
 
 
 def test_load_benchmark_images_with_one_image(tmp_path: Path) -> None:
@@ -71,3 +71,55 @@ def test_load_benchmark_images_with_empty_images_array(tmp_path: Path) -> None:
     dataset_path.write_text("images = []\n", encoding="utf-8")
 
     assert load_benchmark_images(dataset_path) == ()
+
+
+def test_load_benchmark_comparison_preserves_artwork_ids(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "dataset.toml"
+    dataset_path.write_text(
+        '[[comparisons]]\nquery_artwork_id = "query-id"\n'
+        'strong_expected_match_id = "strong-id"\nweak_expected_match_id = "weak-id"\n',
+        encoding="utf-8",
+    )
+
+    comparisons = load_benchmark_comparisons(dataset_path)
+
+    assert comparisons == (BenchmarkComparison("query-id", "strong-id", "weak-id"),)
+
+
+def test_load_benchmark_comparisons_preserves_manifest_order(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "dataset.toml"
+    dataset_path.write_text(
+        '[[comparisons]]\nquery_artwork_id = "second-query"\n'
+        'strong_expected_match_id = "second-strong"\nweak_expected_match_id = "second-weak"\n'
+        '[[comparisons]]\nquery_artwork_id = "first-query"\n'
+        'strong_expected_match_id = "first-strong"\nweak_expected_match_id = "first-weak"\n',
+        encoding="utf-8",
+    )
+
+    assert load_benchmark_comparisons(dataset_path) == (
+        BenchmarkComparison("second-query", "second-strong", "second-weak"),
+        BenchmarkComparison("first-query", "first-strong", "first-weak"),
+    )
+
+
+@pytest.mark.parametrize("manifest", ["comparisons = []\n", "images = []\n"])
+def test_load_benchmark_comparisons_with_empty_or_absent_comparisons(
+    tmp_path: Path, manifest: str
+) -> None:
+    dataset_path = tmp_path / "dataset.toml"
+    dataset_path.write_text(manifest, encoding="utf-8")
+
+    assert load_benchmark_comparisons(dataset_path) == ()
+
+
+def test_load_benchmark_comparisons_does_not_hide_incomplete_entries(tmp_path: Path) -> None:
+    dataset_path = tmp_path / "dataset.toml"
+    dataset_path.write_text(
+        '[[comparisons]]\nquery_artwork_id = "query"\nstrong_expected_match_id = "strong"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(KeyError) as error:
+        load_benchmark_comparisons(dataset_path)
+
+    assert error.value.args == ("weak_expected_match_id",)

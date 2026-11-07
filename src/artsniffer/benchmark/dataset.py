@@ -1,9 +1,9 @@
-"""Load benchmark image records from a TOML dataset manifest."""
+"""Load benchmark images and expected comparisons from a TOML dataset manifest."""
 
 import tomllib
 from pathlib import Path
 
-from artsniffer.benchmark.models import BenchmarkImage
+from artsniffer.benchmark.models import BenchmarkComparison, BenchmarkImage
 
 
 def load_benchmark_images(dataset_path: Path) -> tuple[BenchmarkImage, ...]:
@@ -23,3 +23,24 @@ def load_benchmark_images(dataset_path: Path) -> tuple[BenchmarkImage, ...]:
             )
         )
     return tuple(benchmark_images)
+
+
+def load_benchmark_comparisons(
+    dataset_path: Path,
+) -> tuple[BenchmarkComparison, ...]:
+    """Read optional ``[[comparisons]]`` in manifest order, preserving artwork IDs."""
+    with dataset_path.open("rb") as dataset_file:
+        dataset = tomllib.load(dataset_file)
+    comparisons: list[BenchmarkComparison] = []
+    for comparison_data in dataset.get("comparisons", ()):
+        query_artwork_id = comparison_data["query_artwork_id"]
+        strong_expected_match_id = comparison_data["strong_expected_match_id"]
+        weak_expected_match_id = comparison_data["weak_expected_match_id"]
+        comparisons.append(
+            BenchmarkComparison(
+                query_artwork_id=query_artwork_id,
+                strong_expected_match_id=strong_expected_match_id,
+                weak_expected_match_id=weak_expected_match_id,
+            )
+        )
+    return tuple(comparisons)
