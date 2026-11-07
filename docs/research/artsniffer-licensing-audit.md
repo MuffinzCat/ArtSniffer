@@ -10,41 +10,60 @@ does not grant permission to use ArtSniffer.
 
 ## Executive recommendation
 
-**PolyForm Noncommercial License 1.0.0 is the closest established candidate**, because it grants
-noncommercial use, modification and redistribution and expressly reserves the licensor's ability
-to grant other licences. Its professionally drafted software-specific terms are a better fit than
-an informal restriction added to MIT or Apache-2.0.
+The clarified rule is **free of charge for everyone**: nobody, including the owner, may charge for
+ArtSniffer itself or a version that remains fundamentally ArtSniffer. This is not a noncommercial-
+use requirement. The owner affirmatively permits ordinary commercial and internal use, including
+use by people or organisations that earn money through other activities.
 
-**It is not sufficiently clear that it implements the owner's exact, unqualified prohibition on
-third-party monetisation.** Its organisational permission and separate distribution grant require
-legal review, described below. Apache-2.0 with Commons Clause v1.0 more explicitly addresses paid
-hosting and selling substantially the software, but deliberately permits other commercial uses,
-including commercial internal use and qualifying value-added products. Neither candidate should
-be represented as guaranteeing that nobody can make money from ArtSniffer.
+**No established, professionally drafted software licence reviewed here clearly and accurately
+guarantees this exact rule. Do not adopt PolyForm Noncommercial, Commons Clause, or another
+near-match as if it did.** Apache-2.0 plus Commons Clause is the closest to restricting paid
+provision of software and substantially ArtSniffer-derived services while allowing commercial
+internal use. But its official FAQ deliberately permits selling value-added products and derivatives,
+leaving a material boundary around heavily modified forks. It also leaves the copyright holder free
+to offer separate licences. PolyForm Perimeter and Elastic License 2.0 restrict competition or
+hosted access, not all charging for the software. Ordinary open-source copyleft licences preserve
+the ability to charge.
 
-Accordingly, leave `README.md`, `NOTICE.md` and `pyproject.toml` unchanged and do not add `LICENSE`.
-The present all-rights-reserved position remains in force, subject to applicable law, existing
-permissions and GitHub's terms. This means the desired general noncommercial permissions are
-**not yet granted**. Review the questions in this report before a separate adoption change.
-If the owner accepts PolyForm's standard boundaries after legal review, adopt the official text
-unchanged, rather than drafting additional restrictions.
+No licence file or licensing metadata has been changed. Keep the current all-rights-reserved state,
+subject to law, GitHub's terms and any existing permissions; do not imply that this report grants
+the desired use rights. Obtain professional licensing advice before adopting any bespoke
+free-of-charge/fork condition or owner covenant. This approach honours the instruction not to
+invent a custom licence or misstate a near-match.
 
 ## Owner's stated goals
 
-The owner wants free downloading and use, self-hosting, source inspection, modification, forks,
-redistribution of originals and modified versions, and contributions for personal, hobby and
-genuinely noncommercial purposes.
+The clarified governing principle is:
 
-Third parties should not sell ArtSniffer, sell substantially derived forks, charge for hosted
-access/SaaS, repackage it as a paid product, or otherwise commercially monetise it in a manner
-prohibited by the selected standard licence. The copyright holder should remain able to grant
-separate commercial licences.
+> **Nobody may charge money for ArtSniffer itself or an ArtSniffer fork/derivative that remains
+> fundamentally ArtSniffer. ArtSniffer and its forks should remain free of charge for everyone,
+> including MuffinzCat.**
 
-The broad "genuinely non-commercial" and "make money" statements are treated conservatively:
-ordinary business use is not assumed acceptable merely because the business does not resell the
-software. Paid support, consulting, sponsorship, advertising, donations and cost recovery also
-need their boundaries understood; a licence should not silently add permissions the owner has
-not considered. There is no requirement to invent a bespoke licence.
+People and organisations should be able to download and use ArtSniffer, run it personally or
+internally in a business, self-host it, inspect/modify/fork it, redistribute originals and
+modified versions, contribute changes, build integrations and use it in research or otherwise
+commercial activities. This includes an artist earning income from art, a business using the
+software internally, and customers independently installing it on ordinary paid VPS/cloud
+infrastructure.
+
+The restriction is about **charging for ArtSniffer or the fundamentally ArtSniffer-derived
+application**, not making money while using it. It is intended to prohibit a purchase/download/
+licence fee, subscription or paywall for ArtSniffer, paid hosted access to ArtSniffer itself,
+premium ArtSniffer, rebranding/minor changes to evade the rule, and fees for modifications or
+features in a fork that still amounts to ArtSniffer. A different name, user interface, packaging,
+deployment, or added features is not intended by itself to permit charging.
+
+Conversely, generic infrastructure or hosting resources, paid hardware capable of running it,
+unrelated software interoperating with it, commercial internal use, and products/services whose
+value does not consist substantially of providing ArtSniffer should generally remain possible.
+This statement is the owner's intent, not a licence test or legal conclusion.
+
+The owner does not intend a special right to sell commercial licences or charge for the software
+personally. This condition on the owner is a distinct difficulty: ordinary non-exclusive software
+licences grant rights to recipients while the copyright holder retains ownership and separate
+licensing authority. A licence's restriction on licensees does not, by itself, bind its own
+licensor. A public promise that the owner also will never charge/issue an exception may need a
+separately enforceable legal mechanism; standard texts reviewed here do not establish that result.
 
 ## Scope, method and limitations
 
@@ -127,10 +146,9 @@ matches, copied examples or external snippets used during development.
 
 Section D.6's inbound=outbound provision is **not** a copyright assignment. In particular, a
 contribution made while the project reserved all rights should not be assumed to grant a later
-right to relicense it. Future contributions under PolyForm alone would also not necessarily let
-the owner commercially relicense contributor-owned changes. Preserve a clear inbound policy and,
-if needed, obtain a professionally reviewed contributor agreement granting that authority.
-Do not claim that this repository already has one.
+right to impose a no-charge condition on it. If changed ownership or permissions are needed to
+cover contributor-owned changes under a future free-of-charge policy, obtain professionally
+reviewed contributor terms. Do not claim that this repository already has them.
 
 ### Imports and third-party code
 
@@ -204,116 +222,153 @@ recipients: its own Violations/cure conditions govern termination.
 
 GitHub's Terms of Service D.5 already grants public-repository viewing/forking rights through the
 service. D.4 and D.8 contain additional hosting/lawful-access provisions. A software licence cannot
-negate separately granted platform rights or statutory exceptions. Legal review should consider
-these terms if "no third-party commercial benefit whatsoever" is intended literally.
+negate separately granted platform rights or statutory exceptions. Legal review should distinguish
+these platform permissions from a price charged specifically for ArtSniffer or its forks.
 
 ## Candidate comparison
 
-The Commons Clause candidate here is **Apache License 2.0 subject to Commons Clause License
-Condition v1.0**, not unmodified Apache-2.0 offered as an alternative. Apache is an appropriate
-permissive base because it has explicit patent, notice and contribution provisions. Choosing MIT
-instead would simplify notices but would provide no express patent grant; it would not repair
-Commons Clause's commercial-use mismatch.
+The central distinction is between a use that is commercial and a charge for the software itself.
+The owner's policy permits the former (including business-internal use) and prohibits the latter,
+including for fundamentally ArtSniffer-derived forks. "Free of charge" is not synonymous with
+"noncommercial", "source-available", or "open source".
 
-In this table, "permitted" always means subject to the candidate's conditions. PolyForm conclusions
-about monetisation are deliberately qualified; see the textual ambiguities immediately below.
+| Candidate | Free download, modify and redistribute? | Commercial/internal use? | Sale/access restriction and modified forks | Fit |
+|---|---|---|---|---|
+| **PolyForm Noncommercial 1.0.0** | Yes for permitted purposes, with notices. | **Generally no** for ordinary commercial purposes. Personal activity must lack anticipated commercial application; listed organisations have a special carve-out regardless of funding. | Purpose-based, not a simple no-price rule. Separate distribution grant does not restate a noncommercial condition. No clear guarantee against selling every copy. | Too restrictive on business use and does not clearly impose the intended price condition. Do not recommend. |
+| **Apache-2.0 + Commons Clause v1.0** | Yes, subject to base/condition notices and Apache obligations. | **Yes.** Commercial internal use is generally allowed; the Sell definition concerns provision to third parties for consideration. | Prohibits charging for a product/service whose value derives entirely or substantially from the software's functionality, expressly including qualifying hosting/support. The official FAQ also says value-added derivatives/products may be sold. Whether a heavily modified but still fundamentally ArtSniffer fork always crosses the "substantially" line is not guaranteed. | **Closest on paid commercial provision while allowing internal use**, but not a dependable no-charge condition for every ArtSniffer-derived fork. Does not bind licensor to no-charge policy. Source-available, not OSI open source. |
+| **PolyForm Perimeter 1.0.1** | Copying, modification and redistribution are granted with notices, for permitted purposes. | Internal business use is generally permitted. | Forbids providing others any product that competes with the software, whether free or paid and regardless of interface/deployment. This can bar free competitive forks/services, while it is a competition restriction rather than a no-charge rule. No Other Rights permits the licensor to grant others rights. | Wrong axis: over-restricts free competing provision, and does not ensure the owner or every fork stays free. Source-available. |
+| **Elastic License 2.0** | Grants use, copying, distribution and derivative works with notices. | **Yes**, including internal business use. | Prohibits substantial hosted/managed access, but does not generally prohibit selling copies or charging for a fork. Its patent grant explicitly contemplates sale subject to limitations. | Hosted-access restriction, not a free-of-charge licence. Source-available. |
+| **Redis Source Available License v2 (RSALv2)** | Grants use/copy/distribution/derivatives subject to conditions. | Yes, including internal commercial use. | Restricts making functionality of original or modified version available to third parties as a service or through distribution; not a price-only rule. Patent grant expressly references sale, subject to limitations. It can block free third-party service/distribution and does not forbid all paid copies as such. | Too restrictive on free provision and does not encode the desired no-charge boundary. Source-available. |
+| **Business Source License 1.1 (BSL)** | Grants copy/modify/derivatives/redistribution, generally for non-production use; the licensor defines an Additional Use Grant and Change Date/Change License. | Production/business use depends on the grant; noncompliant use requires purchase of a commercial licence or stopping use. | Not a durable no-fee guarantee: it expressly contemplates charging for commercial licences and changes to an open-source Change License (usually after up to four years). | Conflicts with free-for-everyone owner policy and long-term restriction. Source-available during its term. |
+| **GPL/AGPL (including strong copyleft)** | Yes; modified covered code must be redistributed under the same freedoms/terms, subject to each licence. | **Yes.** Commercial internal and external uses are allowed. | Copyleft preserves downstream rights/source obligations, not a no-price rule. The GPL expressly permits charging any price for copies; paid SaaS is not generally prohibited by GPL, and AGPL's network source obligation is not a ban on charging. | Preserves forks' licence freedoms but explicitly fails the no-charge requirement. OSI open source. |
+| **MIT / Apache-2.0 / MPL-2.0** | Yes. | Yes. | Permit commercial distribution/sale; MPL copyleft requires source for covered files on distribution but does not prohibit a fee. | Fail the price rule. OSI open source. |
 
-| Question | PolyForm Noncommercial 1.0.0 | Apache-2.0 + Commons Clause v1.0 |
-|---|---|---|
-| Free download/source inspection/personal use | Permitted for permitted purposes; listed personal activities must have no anticipated commercial application. | Permitted; ordinary commercial purposes also allowed outside defined Sell. |
-| Personal/hobby self-hosting | Permitted on the same purpose basis. | Permitted. |
-| Modification and forks | Permitted for permitted purposes under Changes and New Works License. | Permitted, including commercial modification outside defined Sell. |
-| Redistribution of original | Express additional distribution grant, with notices; its unqualified wording needs review before claiming all paid distribution is forbidden. | Permitted except defined Sell; base and condition notices must accompany it. |
-| Redistribution of modified versions | Expressly covered when changes/new works are permitted; preserve terms/notices. No unrestricted commercial relicensing of ArtSniffer's underlying code. | Permitted except defined Sell, with Apache modification/notice requirements and Commons Clause notice. |
-| Contributions | Noncommercial changes can be submitted; not a copyright assignment or automatic commercial relicensing authority. | Submissions allowed; Apache section 5 supplies default inbound terms, not ownership transfer. |
-| Ordinary commercial internal use prohibited? | Generally outside permitted purposes; organisational carve-out and genuinely noncommercial activities must be considered. | **No.** Internal business use is generally allowed; Sell requires provision to third parties. |
-| Can a company use it internally without reselling? | Not automatically. The use's purpose matters; being free to acquire is not enough. A genuinely noncommercial use may qualify. | **Yes**, normally, including for commercial business operations. |
-| Selling the original software | Commercial purpose generally outside the use grant, but separate distribution wording prevents a categorical assurance. | **Prohibited** when the product/service's value derives entirely or substantially from ArtSniffer. |
-| Selling modified forks | Commercial development/use generally outside the grants; distribution and organisational issues still need review. | **Prohibited** when value still derives entirely/substantially from its functionality; real value-added products may be sold. |
-| Paid hosting / SaaS | Commercial operation generally outside the use grant; organisational permission needs review. | Hosting fees expressly included in Sell for a substantially ArtSniffer-derived service. Not a ban on all larger SaaS using a component. |
-| Paid consulting / support | Commercial activity involving licensed use or changes generally outside the purpose grant; advice alone may not exercise copyright rights. | Fees for related consulting/support expressly included, but only with the substantial-value condition. FAQ says consulting may be allowed. |
-| Attribution/notices | Give recipients the terms or official URL and any supplied plain-text `Required Notice:` lines. Not a mandatory UI credit or copyleft source-publication rule. | Include Apache text and Commons Clause condition; retain relevant source notices, mark changed files, and preserve relevant upstream NOTICE attribution where supplied. |
-| Patent provisions | Express grant of licensable claims infringed by using the software; written patent-infringement claims trigger Patent Defense termination. | Apache contributor patent grant limited to covered contribution claims; patent-litigation termination. Condition limits granted rights; it does not create extra patents. |
-| OSI open source? | **No: source-available.** Commercial-purpose restrictions conflict with the Open Source Definition. | **No: source-available.** Adding Commons Clause removes the combined offering's open-source status. |
-| Owner can grant separate commercial licences? | **Yes**, for rights it controls; No Other Rights expressly preserves licensing to others. Contributor/dependency rights remain separate. | **Yes**, for rights it controls; a nonexclusive public licence does not transfer ownership. Same contributor/dependency qualification. |
-| Core mismatch | Organisational carve-out, undefined noncommercial boundaries and unqualified distribution wording versus an absolute no-monetisation demand. | Intentionally allows commercial internal use and value-added monetisation; not a genuinely-noncommercial-only licence. |
+No candidate evaluated is recommended as exactly satisfying the clarified owner intent. Standard
+source-available terms that restrict competition or hosted access are not equivalent to a
+no-charge rule, and open-source copyleft rules expressly preserve commercial sale.
 
-### PolyForm: exact text and uncertainties
+### PolyForm Noncommercial: why not
 
-Its Copyright License allows otherwise infringing acts "for any permitted purpose", while
-Noncommercial Purposes says "Any noncommercial purpose is a permitted purpose".
-Personal Uses enumerates research/experimentation, personal study, entertainment, hobbies, amateur
-pursuits and religious observance "without any anticipated commercial application".
+The operative grant permits use, modification and distribution for "any permitted purpose";
+Noncommercial Purposes says "Any noncommercial purpose is a permitted purpose". Personal use is
+described as occurring "without any anticipated commercial application". Although the text grants
+an additional Distribution License, the use/change grants remain purpose-limited.
 
-Two clauses are material to the strict owner intent:
+The licence also allows use by specified charities, educational/public research/safety/health/
+environmental-protection organisations and government institutions "regardless of the source of
+funding or obligations resulting from the funding". This is an organisation-based exception, not
+the owner's general permission for commercial businesses to use the software internally.
 
-> Use by any charitable organization, educational institution, public research organization,
-> public safety or health organization, environmental protection organization, or government
-> institution is use for a permitted purpose regardless of the source of funding or obligations
-> resulting from the funding.
+PolyForm Noncommercial therefore confuses the intended line: it can prohibit a business using
+ArtSniffer internally without charging for ArtSniffer, while treating certain funded organisations
+differently. Its distribution sentence also does not unambiguously say "no person may charge any
+price for a copy or derivative". It is unnecessarily restrictive for the clarified intent and
+is **not** the recommendation merely because it has "Noncommercial" in its name.
 
-This is broader than a simple test that every activity must earn no money. Do not say that all
-paid, sponsored or revenue-associated activities by these organisations are necessarily prohibited.
-The clause's application to particular fee-charging institutions/services needs legal review.
+For completeness: personal/hobby use and research without anticipated commercial application are
+expressly included. Modifications and redistribution are permitted for licensed purposes, with
+terms/URL and any supplied `Required Notice:` lines passed to recipients. A paid hosted service or
+commercial consulting that requires using/modifying the software generally falls outside the
+noncommercial-purpose permission; the charitable/educational/public-body exception and the separate
+distribution grant complicate categorical conclusions about fee-bearing activities. Consulting
+that does not exercise licensed rights is not automatically prohibited by this copyright grant.
+It is not a copyleft licence and does not require publishing all modifications.
 
-> The licensor grants you an additional copyright license to distribute copies of the software.
+Its express patent licence covers licensable claims; written patent-infringement claims trigger
+Patent Defense termination. The first-notified-violation cure period is 32 days. It preserves fair
+use and has an as-is/no-liability clause. It is source-available, not OSI open source. No Other
+Rights reserves the licensor's ability to grant other licences, which also conflicts with treating
+it as a binding no-exceptions promise by the owner.
 
-The separate Distribution License does not repeat the permitted-purpose limitation. It expressly
-covers permitted modifications, but the interaction with commercial distribution of originals
-is not resolved by merely reading the licence's name or the project's general description.
-This audit does **not** conclude that selling copies is affirmatively allowed; it concludes that
-a blanket assurance that all selling is prohibited is unsafe without authoritative interpretation.
+### Commons Clause: FAQ-based boundary
 
-The licence also leaves donations, advertising, sponsorship, mixed-purpose use, cost recovery and
-consulting boundaries to purpose/legal analysis rather than defining an exhaustive list of sales.
-Its patent grant, first-notified-violation 32-day cure provision, fair-use preservation and
-as-is/liability terms should be retained exactly.
+The operative Commons Clause v1.0 excludes the right to "Sell" where someone provides to third
+parties for consideration a product/service whose value derives entirely or substantially from
+the software's functionality. The definition specifically includes fees for hosting and related
+consulting/support. The FAQ states that users may build on the software, embed it in larger sold
+products, sell qualifying SaaS/products, and provide some consulting, provided what they sell is
+not substantially the licensed software itself. The FAQ describes merely renaming it, changing
+function/API names, or offering the same functionality as SaaS as still restricted; it says
+"substantially" means for the most part/essentially.
 
-PolyForm is not a share-alike/source-disclosure licence: recipients must retain the underlying
-terms/notices, but the text does not require publication of every modification. It does not permit
-recipients to sublicense/transfer their licences; that is different from its expressly permitted
-redistribution. It cannot prevent commercial use of independently owned dependencies on their
-own, or capture an independently written implementation merely because it has similar ideas.
+This fits several examples: an ordinary paid VPS is not by itself a product whose value
+substantially derives from ArtSniffer; a company can generally run the software internally; and a
+genuinely unrelated commercial product is not barred merely for interoperability. A paid hosted
+ArtSniffer service, repackaged copy, or lightly changed fork would likely fall within the intended
+Sell restriction where its value remains substantially ArtSniffer functionality.
 
-### Commons Clause: exact boundary
+It does **not** reliably promise the stronger fork rule. The official FAQ explicitly permits
+selling derivatives/products when value is added. There is no objective threshold that guarantees
+that a substantially modified but "fundamentally ArtSniffer" application remains substantially the
+licensed Software as a matter of every fact pattern. The clause's focus is charging third parties,
+not making a copy available free of charge; it is not a share-alike condition requiring all
+ArtSniffer-derived work to remain under the condition.
 
-The operative definition restricts providing to third parties, "for a fee or other consideration
-(including without limitation fees for hosting or consulting/support services related to the
-Software), a product or service whose value derives, entirely or substantially, from the
-functionality of the Software".
+For the owner's examples, personal/research use, modification, free redistribution and business
+internal use are generally permitted. Paid hosting/access to ArtSniffer itself is within the
+restricted category when its value is substantially ArtSniffer functionality; a generic VPS
+provider or unrelated product is not barred merely for making infrastructure or interoperating
+software available. Fees for related hosting/consulting/support are named, but the substantial-
+value test still applies; the official FAQ permits consulting and value-added products in some
+cases. Modified copies may be redistributed, but charging for them is prohibited only when they
+meet the Sell test, not by an express downstream no-fee/share-alike rule.
 
-Thus selling a rebranded ArtSniffer, substantially derived paid fork or substantially ArtSniffer
-hosted service is within its intended restriction. But the official FAQ expressly permits
-embedding it in a larger sold product, qualifying SaaS and some consulting. "Substantially" is a
-value/functionality test, not a line-count threshold or a ban on every commercial derivative.
-The FAQ is explanatory and cannot override the condition's actual text.
+Apache-2.0 requires its licence and relevant copyright/attribution notices to be retained and
+modified files to note changes; the Commons Clause condition must also accompany the licence
+notice. Apache grants contributor patent rights subject to its patent-litigation termination;
+Commons Clause supplies no separate patent grant. Apache has no copyleft requirement to publish
+modification source, and its redistribution terms permit licensing modifications/derivatives on
+different terms, subject to complying with the base and Sell restriction. The combination is
+source-available, not OSI open source. The copyright holder retains its rights and can separately
+license them, so the standard text does not commit MuffinzCat to the same no-charge rule.
 
-This would be a defensible alternative **only if the owner changes the goal** to preventing
-defined Sell while accepting commercial internal use and qualifying value-added monetisation.
-Do not adopt it while claiming it bans all commercial use. Nor should unmodified Apache or MIT be
-offered alongside it as a public alternative, which would allow recipients to bypass the condition.
+Most importantly, neither Apache nor Commons Clause binds the licensor not to offer separate
+commercial terms for rights it owns. The official Commons Clause was designed to let its licensors
+negotiate for prohibited sales. It therefore conflicts with the owner's explicit no-special-
+licence/no-owner-sale principle unless a separate enforceable commitment addresses it.
 
-### Other established options
+Do not adopt Apache + Commons Clause while describing it as guaranteeing that every fundamentally
+ArtSniffer-derived fork remains free or that MuffinzCat can never charge for ArtSniffer.
 
-The official PolyForm comparison was reviewed. Strict removes modification and distribution;
-Internal Use permits internal business purposes and lacks the required distribution permission;
-Small Business permits business use; Shield/Perimeter restrict competition rather than commercial
-use generally. None materially improves this fit without losing a required freedom or retaining
-commercial uses. Strict's actual exclusion of distributing or making changes was also checked.
-No additional candidate is recommended.
+### Other near-matches and OSI boundary
 
-Unmodified MIT/Apache and GPL/AGPL are not noncommercial licences. Network copyleft is not a ban
-on paid hosting. Creative Commons noncommercial terms are not selected as a software licence;
-their use for artwork or other content is a separate question. No custom hybrid or informal
-"no commercial use" addendum is proposed.
+PolyForm Perimeter 1.0.1 is closer than PolyForm Noncommercial in allowing commercial/internal use.
+Its Competition clause covers a substitute for the software's function/value regardless of whether
+it is free, a service, library, plug-in or port. Thus it can prevent even a **free** competing
+fork/hosted service, while not itself requiring every copy to be free of charge. Its No Other Rights
+clause expressly says the licence does not prevent the licensor from granting licences to others.
+It is a competition restriction, not the owner's distribution-price restriction.
+
+Elastic License 2.0 permits commercial use, modification and redistribution but prevents substantial
+hosted/managed service access; its official FAQ permits some managed hosting where customers lack
+access to substantial functionality. It does not ban selling copies or charged modified
+distributions. RSALv2 permits commercial use but restricts making the original or modified
+software's functionality available to third parties, even beyond paid access. BSL explicitly
+contemplates commercial licences for production use and later conversion to a Change License.
+These are not free-for-everyone sale prohibitions.
+
+The GPL/AGPL preserve source and downstream freedoms for covered derivatives, but the GNU FAQ
+explicitly says a distributor may charge any price; recipients can then redistribute for free or
+for a fee. Copyleft cannot make forks free of charge. Open Source Definition criterion 1 requires
+that the licence not restrict selling/giving away the software and not require a royalty/fee for
+sale. A licence prohibiting anyone from charging for ArtSniffer or its derivative copies therefore
+cannot be OSI open source. Any accurate model with the intended price restriction would be
+**source-available, not OSI open source**.
+
+This audit found no established candidate that simultaneously: (1) permits commercial/internal
+use; (2) permits modification and redistribution; (3) forbids all charges for original and
+fundamentally ArtSniffer-derived applications, including qualifying forks; and (4) binds the owner
+to the same no-charge rule. These conditions do not establish that no such text exists anywhere;
+they mean no reviewed professional standard has been verified as a clear match. Do not patch a
+standard text or invent a "no charge" addendum to force a fit.
 
 ## Dependency and redistribution compatibility
 
 **ArtSniffer's own-source licence is separate from every dependency licence.** Imports of independent
 permissively licensed packages do not generally require the importer itself to adopt their
 licence. Redistributing those packages, their modified files or a bundled executable/container
-does require compliance with their terms. A noncommercial project licence cannot remove their
-commercial permissions or replace their notices.
+does require compliance with their terms. An ArtSniffer-specific free-of-charge condition cannot
+replace their notices or make their own copies noncommercial.
 
 The default application has no declared runtime dependencies. Optional `benchmark-dinov2` adds
 Pillow, Torch and Transformers and their transitive dependencies. The lock also includes development
@@ -394,9 +449,9 @@ Important consequences:
 - **tqdm is not simply MIT.** Its upstream `LICENCE` identifies MPL-covered contributions and
   MIT exceptions. MPL 2.0 sections 3.1-3.4 require covered source, including modifications, to remain
   under MPL, preserve notices and make that source available when executables are distributed.
-  Section 3.3 permits separately licensed larger works. Keep tqdm distinct; do not put a
-  noncommercial restriction on its covered source. Its presence is not an automatic prohibition
-  on licensing independent ArtSniffer code under PolyForm.
+  Section 3.3 permits separately licensed larger works. Keep tqdm distinct; do not impose an
+  ArtSniffer-specific free-of-charge restriction on its covered source. Its presence is not an
+  automatic prohibition on licensing independent ArtSniffer code under a compatible condition.
 - **NVIDIA clearance is unresolved for bundled distribution.** Thirteen packages lack a licence
   declaration in the retrieved metadata, and others expressly identify proprietary terms.
   CUDA's official EULA provides conditional redistribution rights for specified components, not
@@ -411,9 +466,10 @@ Important consequences:
   their distributions and embedded components need their own review. Python's PSF/historical
   notices and SQLite's dedication are not replaced by ArtSniffer's licence. No such bundle is
   tracked here.
-- **Future copyleft imports require a fresh check.** A whole-work GPL/AGPL obligation can conflict
-  with adding noncommercial restrictions to a combined derivative. No such whole-work licence was
-  identified in the retrieved package declarations, but binary contents have not been certified.
+- **Future copyleft imports require a fresh check.** A whole-work copyleft obligation can affect
+  whether an ArtSniffer-specific price condition may be imposed on a combined derivative. No such
+  whole-work licence was identified in the retrieved package declarations, but binary contents
+  have not been certified.
 
 For an own-source-only release, no dependency-driven requirement to license all ArtSniffer source
 permissively or under copyleft was established. For an optional-dependency bundle, no complete
@@ -434,8 +490,8 @@ the current generic `NOTICE.md` is not a substitute for an artefact-specific not
 
 The Hugging Face model-page/historical-card evidence above was obtained through search; direct
 model-card download failed DNS. It is a reason to verify the exact artefact's provenance/licence,
-**not** a legal conclusion about which grant controls every converted weight file. Commercial
-licensing of ArtSniffer later cannot authorise a restricted checkpoint or third-party content.
+**not** a legal conclusion about which grant controls every converted weight file. A licence for
+ArtSniffer's own source cannot authorise a restricted checkpoint or third-party content.
 
 Current README plans include source metadata, generated semantic signals, OneDrive collections,
 Discord/Telegram delivery and model-neutral analysis. Those integrations have independent API,
@@ -456,44 +512,48 @@ source by themselves, but remain gates for model use, bundling and future commer
 
 ## Adoption decision and manual-review gates
 
-**Phase 5 is not authorised by the evidence obtained:** no standard candidate has been established
-to match the strict intent without material qualification, and the repository evidence alone does
-not settle all copyright authority. There is no licence adoption commit in this proposal.
-Dependency-bundle uncertainty is a separate release/integration concern, not automatically a
-copyright blocker for the independent project source.
+**Do not change the licence.** This is not a finding that application code is affirmatively
+ineligible for licensing: no affirmative third-party application-code blocker was found. It is
+the finding that no reviewed standard licence matches the clarified restrictions and the available
+repository evidence does not establish full title/authority. Unresolved binary dependency/EULA
+questions primarily concern distribution of those artefacts, not licensing independent
+ArtSniffer-owned source.
 
 The owner/legal reviewer should resolve:
 
-1. Whether the exact PolyForm organisational and distribution grants satisfy the intended sales,
-   paid-hosting and "genuinely noncommercial" boundaries; seek authoritative interpretation rather
-   than silently rewriting those clauses.
-2. Whether advertising, sponsorship, donation-funded hosting, cost recovery, fee-charging
-   institutions and paid support are acceptable; distinguish uses requiring a copyright licence
-   from independent advice, legal exceptions and platform-granted rights.
-3. The copyright holder's identity/authority, any employer/client rights, contribution permissions,
-   code-reference/snippet provenance and any earlier private/public licence grants not in Git.
-4. An inbound contribution arrangement sufficient for later commercial licensing of contributor
-   changes; a DCO or GitHub account identity alone is not a copyright assignment.
+1. Whether to commission professional legal/licensing review of a purpose-built condition and
+   owner commitment. The condition must distinguish charging for ArtSniffer/fundamentally
+   ArtSniffer-derived applications from commercial use, generic infrastructure, hardware,
+   unrelated integrations and separately valuable products. "Fundamentally ArtSniffer" needs a
+   legally workable boundary that resists relabelling while not capturing unrelated works.
+2. How the owner can be bound by the same no-charge rule. Standard non-exclusive licences normally
+   govern recipients' exercise of licensed rights, not the copyright holder's retained rights.
+   Consider enforceability, irrevocability, future owners and whether a public covenant or another
+   legal structure is needed. A statement of intent alone may not bind a future rights-holder.
+3. Whether "charging for ArtSniffer" includes donations, sponsorship, ads, pass-through costs,
+   paid installation/maintenance, consulting, service-level commitments or hosting where users
+   cannot access the software itself; preserve the owner's examples rather than defaulting to
+   "no commercial use."
+4. The copyright holder's identity/authority, any employer/client rights, contributor permissions,
+   code-reference/snippet provenance and any earlier private/public grants not in Git. Future
+   contributor terms must be compatible with the same downstream no-charge/fork policy; a DCO or
+   GitHub account identity alone is not a copyright assignment.
 5. Exact checkpoint licences/revisions and artefact-level dependency/EULA/notices for anything
-   actually bundled. Keep this separate from the own-source licensing decision.
+   actually bundled. Keep these obligations distinct from licensing independent project source.
 
-If these are resolved in favour of PolyForm's **unmodified** standard terms, a later, separate PR
-can add the official `LICENSE`, supply a truthful `Required Notice:` copyright line as prescribed,
-replace the contradictory reservation in README/NOTICE with an accurate source-available licensing
-summary, and use `PolyForm-Noncommercial-1.0.0` in supported package licence metadata. Ensure source
-and wheel distributions actually include the licence/notices; do not merely update the README.
-Preserve independent third-party terms and explain the adoption revision/date and earlier grants.
+If professional review finds a standard licence and a binding owner arrangement that clearly
+match, document that exact decision first. If it requires an altered standard text, newly written
+condition or ancillary covenant, do not draft it as an informal report amendment: obtain and use
+professionally prepared legal terms and review contributor/ownership authority before changing
+`LICENSE`, README, NOTICE or package metadata. Preserve all independent third-party terms and explain
+the scope/date and earlier-grant implications.
 
-That eventual offering would allow free genuinely noncommercial personal/hobby use, self-hosting,
-inspection, noncommercial changes, forks and redistribution/contributions under the standard
-conditions. Commercial operation/development outside permitted purposes would require separate
-permission; sales/fee scenarios must follow the reviewed interpretation, not an invented blanket
-rule. It would be **source-available, not OSI open source**, with commercial use intentionally
-restricted. The owner could license rights it controls commercially in parallel.
-
-If the standard boundaries remain unacceptable or uncertain, retain the current reservation
-pending a new owner decision. Do not manufacture a PolyForm variant, add an informal no-commercial
-sentence, remove independent notices or claim the owner's goals have already been implemented.
+No licence adopted now means the source remains under the observed all-rights-reserved notice,
+subject to law, GitHub terms and existing permissions; the intended free-use permissions are not
+implemented. If the eventual restriction is imposed by licence, it is **source-available, not OSI
+open source** because it forbids charging for copies/derivatives. It should permit commercial and
+internal use otherwise, subject only to the clearly scoped charge prohibition. This report does
+not imply that anyone (including the owner) is already bound by a future no-charge condition.
 
 ## Official and authoritative sources
 
@@ -508,6 +568,7 @@ inventory; they evidence metadata rather than replacing licence texts.
 | Official deployed website-source text, pinned revision | <https://github.com/polyformproject/polyformproject.org/blob/caa273a0f67aba05e8cc06f7e869469918f53617/licenses/noncommercial/1.0.0.txt> |
 | PolyForm drafting/status explanation | <https://polyformproject.org/about> and <https://github.com/polyformproject/polyformproject.org/blob/main/pages/about.md> |
 | Official PolyForm suite comparison | <https://polyformproject.org/licenses> and <https://github.com/polyformproject/polyformproject.org/blob/main/pages/licenses.md> |
+| PolyForm Perimeter 1.0.1 official text | <https://polyformproject.org/licenses/perimeter/1.0.1> and <https://github.com/polyformproject/polyformproject.org/blob/main/licenses/perimeter/1.0.1.txt> |
 | Official PolyForm Strict text used for exclusion | <https://github.com/polyformproject/polyformproject.org/blob/main/licenses/strict/1.0.0.txt> |
 | Commons Clause condition and official FAQ | <https://commonsclause.com/> |
 | Commons Clause site's official source, pinned revision | <https://github.com/fossas/commons-clause/blob/a83b2c7466e31f6cb3b285b08319e8af357ea244/src/index.html> |
@@ -515,8 +576,12 @@ inventory; they evidence metadata rather than replacing licence texts.
 | MIT text/reference | <https://choosealicense.com/licenses/mit/> and <https://github.com/github/choosealicense.com/blob/gh-pages/_licenses/mit.txt> |
 | CC0 legal text | <https://creativecommons.org/publicdomain/zero/1.0/legalcode>; full text read in github/gitignore LICENSE linked above |
 | Open Source Definition, especially sections 1 and 6 | <https://opensource.org/osd> (official search evidence) |
+| GNU GPL FAQ, charging a fee for copies | <https://www.gnu.org/licenses/gpl-faq.html#DoesTheGPLAllowSelling> (official search evidence) |
 | GitHub Terms of Service, D and J | <https://docs.github.com/en/site-policy/github-terms/github-terms-of-service> (directly retrieved; effective date shown: 27 April 2026) |
 | Mozilla MPL 2.0 official text | <https://www.mozilla.org/en-US/MPL/2.0/>; relevant sections retrieved via <https://github.com/github/choosealicense.com/blob/gh-pages/_licenses/mpl-2.0.txt> |
+| Elastic License 2.0 and FAQ | <https://www.elastic.co/licensing/elastic-license> and <https://www.elastic.co/licensing/elastic-license/faq> (official search evidence) |
+| Redis Source Available License v2 | <https://redis.io/legal/rsalv2-agreement/> (full official text retrieved) |
+| Business Source License 1.1 | <https://mariadb.com/bsl11/> and <https://mariadb.com/bsl-faq-adopting/> (official search evidence) |
 | tqdm attribution/MPL/MIT text | <https://github.com/tqdm/tqdm/blob/master/LICENCE> |
 | CUDA EULA and redistribution component lists | <https://docs.nvidia.com/cuda/eula/> (official search evidence; exact installed component terms still required) |
 | DINOv2 upstream licence and model statement | <https://github.com/facebookresearch/dinov2/blob/main/LICENSE> and <https://github.com/facebookresearch/dinov2/blob/main/README.md> (directly retrieved) |
