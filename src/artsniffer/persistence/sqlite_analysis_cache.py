@@ -29,6 +29,13 @@ class SQLiteAnalysisCache:
 
     def get(self, artwork_id: str, content_hash: str, model_id: str) -> ArtworkAnalysis | None:
         """Return analysis only for an exact artwork, content, and model version match."""
+        if not isinstance(artwork_id, str) or not artwork_id.strip():
+            raise ValueError("Artwork ID must not be empty or whitespace.")
+        if not isinstance(content_hash, str) or not content_hash.strip():
+            raise ValueError("Content hash must not be empty or whitespace.")
+        if not isinstance(model_id, str) or not model_id.strip():
+            raise ValueError("Model ID must not be empty or whitespace.")
+
         row = self._connection.execute(
             """
             SELECT embedding_json, tags_json

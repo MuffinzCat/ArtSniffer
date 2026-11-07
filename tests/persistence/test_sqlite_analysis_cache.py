@@ -36,6 +36,28 @@ def test_sqlite_analysis_cache_round_trips_analysis(sqlite_cache: AnalysisCache)
     assert sqlite_cache.get("artwork-002", "sha256:content-v1", "visual-model-v1") is None
 
 
+@pytest.mark.parametrize(
+    ("artwork_id", "content_hash", "model_id", "message"),
+    [
+        ("", "sha256:content-v1", "visual-model-v1", "Artwork ID"),
+        (" \t\n", "sha256:content-v1", "visual-model-v1", "Artwork ID"),
+        ("artwork-001", "", "visual-model-v1", "Content hash"),
+        ("artwork-001", " \t\n", "visual-model-v1", "Content hash"),
+        ("artwork-001", "sha256:content-v1", "", "Model ID"),
+        ("artwork-001", "sha256:content-v1", " \t\n", "Model ID"),
+    ],
+)
+def test_sqlite_analysis_cache_rejects_malformed_lookup_identity(
+    sqlite_cache: AnalysisCache,
+    artwork_id: str,
+    content_hash: str,
+    model_id: str,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=rf"\A{message} must not be empty or whitespace\.\Z"):
+        sqlite_cache.get(artwork_id, content_hash, model_id)
+
+
 def test_sqlite_analysis_cache_does_not_reuse_changed_content_or_model(
     sqlite_cache: AnalysisCache,
 ) -> None:
