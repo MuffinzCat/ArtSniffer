@@ -575,9 +575,11 @@ The owner/legal reviewer should resolve:
    independent commercial activity, including generic infrastructure, hardware, separately valuable
    integrations and independent media. It also needs workable boundaries for the owner's exceptions:
    genuinely optional donations, non-profit reimbursement of actual costs, ordinary employment,
-   independent media and products, at-cost preinstallation/distribution, advertising/sponsorship,
-   development work and ArtSniffer-specific goods/services. "Fundamentally ArtSniffer" and "profit"
-   need legally workable definitions that resist relabelling without capturing unrelated activity.
+   independent media and products, developer-incurred platform and distribution costs, and hardware
+   preinstallation without an ArtSniffer-specific charge or price premium. The review should also
+   address the intended prohibition on advertising/sponsorship, paid development work and
+   ArtSniffer-specific goods/services. "Fundamentally ArtSniffer" and "profit" need legally workable
+   definitions that resist relabelling without capturing unrelated activity.
 2. How the owner can be bound by the same no-charge rule. Standard non-exclusive licences normally
    govern recipients' exercise of licensed rights, not the copyright holder's retained rights.
    Consider enforceability, irrevocability, future owners and whether a public covenant or another
