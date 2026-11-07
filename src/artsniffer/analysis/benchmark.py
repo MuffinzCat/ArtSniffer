@@ -1,3 +1,5 @@
+"""Provider-neutral timing of image analysers over benchmark images."""
+
 from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
@@ -8,12 +10,16 @@ from artsniffer.analysis.image_analyser import ImageAnalyser
 
 @dataclass
 class BenchmarkImage:
+    """Identify an artwork and the image to analyse."""
+
     artwork_id: str
     image_path: Path
 
 
 @dataclass
 class BenchmarkAnalysis:
+    """Store an analysis and the time taken to produce it."""
+
     model_id: str
     artwork_id: str
     analysis: ArtworkAnalysis
@@ -21,6 +27,7 @@ class BenchmarkAnalysis:
 
 
 def benchmark_image(analyser: ImageAnalyser, benchmark_image: BenchmarkImage) -> BenchmarkAnalysis:
+    """Time one analysis and verify its model and artwork identifiers."""
     start = perf_counter()
     analysis = analyser.analyse(benchmark_image.artwork_id, benchmark_image.image_path)
     elapsed_seconds = perf_counter() - start
@@ -39,4 +46,14 @@ def benchmark_image(analyser: ImageAnalyser, benchmark_image: BenchmarkImage) ->
 def benchmark_images(
     analyser: ImageAnalyser, benchmark_images: tuple[BenchmarkImage, ...]
 ) -> tuple[BenchmarkAnalysis, ...]:
+    """Benchmark one analyser on each image in input order."""
     return tuple(benchmark_image(analyser, img) for img in benchmark_images)
+
+
+def benchmark_analysers(
+    analysers: tuple[ImageAnalyser, ...], benchmark_images: tuple[BenchmarkImage, ...]
+) -> tuple[BenchmarkAnalysis, ...]:
+    """Benchmark every analyser on every image, ordered by analyser then image."""
+    return tuple(
+        benchmark_image(analyser, img) for analyser in analysers for img in benchmark_images
+    )
