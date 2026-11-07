@@ -20,7 +20,7 @@ jobs:
       github.event.pull_request.head.ref != 'main' &&
       (
         github.event.pull_request.user.login == 'MuffinzCat' ||
-        github.event.pull_request.user.login == 'app/copilot-swe-agent'
+        github.event.pull_request.user.login == 'Copilot'
       )
     runs-on: ubuntu-latest
     permissions:
@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Check out pull request
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
