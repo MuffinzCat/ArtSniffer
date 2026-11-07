@@ -10,92 +10,64 @@ does not grant permission to use ArtSniffer.
 
 ## Executive recommendation
 
-The clarified owner policy is broader than a zero purchase price: **nobody, including the owner,
-should profit specifically from ArtSniffer, a fundamentally ArtSniffer-derived fork, or
-ArtSniffer-specific goods or services.** This is not a general noncommercial-use requirement.
-Genuinely independent commercial activity remains allowed, including business-internal use,
-ordinary paid employment, independently valuable media and products, and generic paid
-infrastructure. The owner's examples and boundaries are recorded below as policy intent only.
+An earlier owner clarification proposed a broad no-profit-from-ArtSniffer-specific-activity policy.
+The owner has since revised that direction to a narrower, value-based sale boundary, described below.
+The older examples are retained only to explain what changed; they are not the current licensing
+test.
 
-**No established, professionally drafted software licence reviewed here clearly and accurately
-guarantees this broader no-profit policy. Do not adopt PolyForm Noncommercial, Commons Clause, or
-another near-match as if it did.** Apache-2.0 plus Commons Clause comes closest to restricting paid
-provision of software and substantially ArtSniffer-derived services while allowing commercial
-internal use, but it does not clearly cover every ArtSniffer-specific revenue stream in the owner's
-examples. Its official FAQ deliberately permits selling value-added products and derivatives,
-leaving a material boundary around heavily modified forks. It also leaves the copyright holder free
-to offer separate licences. PolyForm Perimeter and Elastic License 2.0 restrict competition or
-hosted access, not all ArtSniffer-specific profit. Ordinary open-source copyleft licences preserve
-the ability to charge.
+The owner's revised policy direction is substantially: **nobody may sell ArtSniffer itself or a
+product/service whose value derives entirely or substantially from ArtSniffer's functionality.**
+The owner accepts that this is narrower than the earlier no-profit-from-all-ArtSniffer-specific-
+activity policy. Apache-2.0 combined with Commons Clause License Condition v1.0 is now the preferred
+candidate: its "Sell" restriction most closely expresses this accepted boundary while retaining
+commercial internal use and otherwise broad use rights. It is a practical candidate, not a legal
+conclusion that every edge case is settled or a licence adoption.
+
+The Commons Clause restricts recipient rights; it does not itself bind the copyright holder not to
+offer different terms. The owner's separate project policy is that official ArtSniffer should
+remain free, but neither this report nor the Commons Clause makes that owner promise irrevocable.
+The combination is source-available, not OSI open source. NPOSL 3.0 is also relevant to a
+no-revenue goal, but its not-for-profit organisation and distribution/service restrictions are a
+poorer fit for this owner's chosen boundary.
 
 No licence file or licensing metadata has been changed. Keep the current all-rights-reserved state,
 subject to law, GitHub's terms and any existing permissions; do not imply that this report grants
-the desired use rights. Obtain professional licensing advice before adopting any bespoke
-free-of-charge/fork condition or owner covenant. This approach honours the instruction not to
-invent a custom licence or misstate a near-match.
+the desired use rights. Obtain professional licensing review before adoption, including review of
+the exact Commons Clause/Apache interaction, owner authority and any commitment about the owner.
+Do not draft or append custom terms in this audit.
 
 ## Owner's stated goals
 
-Nobody, including MuffinzCat, should profit specifically from ArtSniffer, a fundamentally
-ArtSniffer-derived fork, or ArtSniffer-specific goods or services. This broader principle is the
-owner's policy intent, not adopted licence language or a conclusion that anyone is legally bound by
-it. It is not a ban on commercial use or on making money from activity that is genuinely independent
-of ArtSniffer.
+The owner's revised policy direction is:
 
-The owner intends to allow:
+> **Nobody may sell ArtSniffer itself or a product/service whose value derives entirely or
+> substantially from the functionality of ArtSniffer.**
 
-- Free access, use, modification, forking and redistribution, with no strings attached to optional
-  donations or tips. Access, features, updates, support or other benefits must not depend on giving.
-- A free-fork maintainer linking to their website or donation page; a community or Discord that
-  distributes or discusses free ArtSniffer/forks accepting genuinely optional donations; and
-  non-profit or at-cost sharing of actual infrastructure expenses, such as splitting a shared
-  instance's VPS bill. Nobody may profit from the cost-sharing, and it must not disguise a service
-  fee.
-- Ordinary paid employment, including a company using ArtSniffer internally and an employee working
-  on or contributing to it during normally paid work time. Ordinary salary is not prohibited merely
-  because some work concerns ArtSniffer.
-- Monetised independent media about ArtSniffer, such as ordinary videos, livestreams, reviews,
-  journalism or articles. A publication may include coverage behind its general paywall when the
-  publication itself has independent value; the paid product must not be ArtSniffer or an
-  ArtSniffer-specific service.
-- Commercial products and services that interoperate with ArtSniffer and have substantial
-  independent value, provided "integration" is not a pretext for selling something whose value
-  substantially consists of ArtSniffer.
-- Normal charges by generic VPS, cloud and infrastructure providers for CPU, RAM, storage and other
-  generic resources used to run ArtSniffer; ordinary commercial hardware with ArtSniffer preinstalled
-  at no additional ArtSniffer-specific charge or price premium; and ordinary app-store, account or
-  distribution costs incurred by a developer/distributor while giving the software to users free.
+This is owner intent, not adopted licence language or a conclusion that anyone is legally bound.
+The owner accepts a narrower rule than the earlier broad policy against profit from any
+ArtSniffer-specific activity. In particular, the eventual software licence need not independently
+prohibit peripheral monetisation (including merchandise, independent paid educational or media
+material, sponsorship, advertising, bounties or other activity) where the value of the offered
+product/service does not derive entirely or substantially from ArtSniffer functionality. This does
+not declare every such activity approved in every context; the relevant boundary is the value test.
 
-The owner intends to prohibit:
+The policy permits commercial and internal use that does not cross that sale/value boundary.
+Generic infrastructure or hardware, an independently valuable product or integration, and
+independent media may be commercial without becoming a sale of ArtSniffer merely because the
+software is used, discussed or included. The owner also intends official ArtSniffer itself to remain
+free. That owner policy is distinct from recipient rights under a public licence.
 
-- Selling ArtSniffer or a fundamentally ArtSniffer-derived fork, and required download/licence fees,
-  subscriptions, paywalls, premium tiers, paid features or in-app purchases tied to it.
-- Advertising inside ArtSniffer or a fundamentally ArtSniffer-derived fork, including advertising
-  used only to recover costs, and sponsorship in exchange for promotion, acknowledgement, placement
-  or other commercial consideration. The owner distinguishes these from no-strings-attached gifts.
-- Paid installation, configuration, ArtSniffer-specific support/help, or for-profit managed hosting
-  or hosted access. Renaming a payment as setup, convenience, service or another fee does not make
-  it acceptable when it effectively monetises ArtSniffer.
-- Development bounties, commissioned ArtSniffer development or other payment specifically in
-  exchange for implementing ArtSniffer features/work.
-- Selling project/fork-branded merchandise whose commercial value derives from the project, or
-  paid courses, training packages, guides, ebooks or similar products created specifically to
-  monetise ArtSniffer.
-- An ArtSniffer-specific premium on otherwise ordinary hardware, including an "ArtSniffer Edition"
-  whose higher price derives from ArtSniffer, or use of a larger wrapper/integration as a loophole
-  when the paid product's value substantially consists of ArtSniffer.
+The prior, more detailed examples (optional gifts, at-cost infrastructure sharing, employment,
+preinstallation, independent media, sponsorship, advertising and paid services) were considered
+under the broader no-profit proposal. They are not each independent requirements of the revised
+software-licensing boundary. Any future licensing decision must still avoid using a wrapper or
+label to evade the accepted value-based restriction.
 
-A genuinely independent commercial activity does not become prohibited merely because ArtSniffer
-is used, discussed, supported by ordinary employment, interoperated with or installed on generic
-paid infrastructure. A genuinely voluntary gift is different from payment in exchange for
-ArtSniffer-related access, work, services, promotion or benefits. These examples express the owner's
-intent; they do not supply a legal definition of profit, a licence test, or enforceable terms.
-
-The owner does not intend a special right to monetise ArtSniffer personally or grant an exception
-for their own benefit. Binding the owner and future rights-holders is a distinct legal problem:
-ordinary non-exclusive software licences grant rights to recipients while the copyright holder
-retains ownership and separate licensing authority. A licence restriction on recipients does not,
-by itself, bind its licensor, and this report does not create an enforceable owner covenant.
+The owner does not intend a special right to monetise official ArtSniffer personally. However, the
+Commons Clause governs the rights granted to recipients and does not by itself bind its licensor to
+never offer separate terms. The report records the owner's policy that official ArtSniffer should
+remain free; it does not make that promise legally enforceable or irrevocable. Professional review
+must address how, if desired, the owner and future rights-holders could be bound.
 
 ## Scope, method and limitations
 
@@ -122,7 +94,9 @@ environment. The complete PolyForm text was instead read from both the project's
 licence-source repository and its website-source repository. Commons Clause's complete condition
 and FAQ were read from the site's official source repository. Official-site search results
 corroborated these sources. Apache-2.0, MIT, CC0 and MPL text was also examined through the sources
-listed below. Source links distinguish directly retrieved text from search-only model evidence.
+listed below. NPOSL 3.0 was reviewed from the OSI-published licence text via official-site search
+evidence and cross-checked against the SPDX text copy. Source links distinguish direct retrieval
+from search evidence.
 
 This is not an exhaustive global code-similarity search, examination of private contracts, or a
 binary/container/software-bill-of-materials clearance. Commit identity, an absent notice and
@@ -259,31 +233,29 @@ these platform permissions from a price charged specifically for ArtSniffer or i
 
 ## Candidate comparison
 
-The central distinction is between genuinely independent commercial activity and profit specifically
-derived from ArtSniffer or ArtSniffer-specific goods/services. The owner's policy permits the former
-(including business-internal use) and prohibits the latter, subject to the stated exceptions for
-optional gifts and non-profit reimbursement of genuine costs. It is broader than a ban on charging
-for copies. "No profit from ArtSniffer" is not synonymous with "noncommercial", "source-available",
-or "open source".
+The revised distinction is whether a product or service is ArtSniffer itself or has value deriving
+entirely or substantially from its functionality. Commercial activity that does not cross this
+boundary remains acceptable; the owner no longer requires the licence itself to prohibit every
+peripheral ArtSniffer-related revenue stream. The owner's separate policy is that official
+ArtSniffer should remain free. "Free" is not synonymous with "noncommercial" or "open source".
 
 | Candidate | Free download, modify and redistribute? | Commercial/internal use? | Sale/access restriction and modified forks | Fit |
 |---|---|---|---|---|
 | **PolyForm Noncommercial 1.0.0** | Yes for permitted purposes, with notices. | **Generally no** for ordinary commercial purposes. Personal activity must lack anticipated commercial application; listed organisations have a special carve-out regardless of funding. | Purpose-based, not a simple no-price rule. Separate distribution grant does not restate a noncommercial condition. No clear guarantee against selling every copy. | Too restrictive on business use and does not clearly impose the intended price condition. Do not recommend. |
-| **Apache-2.0 + Commons Clause v1.0** | Yes, subject to base/condition notices and Apache obligations. | **Yes.** Commercial internal use is generally allowed; the Sell definition concerns provision to third parties for consideration. | Prohibits charging for a product/service whose value derives entirely or substantially from the software's functionality, expressly including qualifying hosting/support. The official FAQ also says value-added derivatives/products may be sold. It does not clearly prohibit all ArtSniffer-specific monetisation (for example, promotion-for-sponsorship, project merchandise or paid media/training) or guarantee the broader fork boundary. | **Closest on restricting paid provision while allowing internal use**, but not a dependable no-profit condition for ArtSniffer-specific goods/services or every fundamentally-derived fork. Does not bind licensor to the policy. Source-available, not OSI open source. |
-| **PolyForm Perimeter 1.0.1** | Copying, modification and redistribution are granted with notices, for permitted purposes. | Internal business use is generally permitted. | Forbids providing others any product that competes with the software, whether free or paid and regardless of interface/deployment. This can bar free competitive forks/services, while it is a competition restriction rather than a no-charge rule. No Other Rights permits the licensor to grant others rights. | Wrong axis: over-restricts free competing provision, and does not ensure the owner or every fork stays free. Source-available. |
-| **Elastic License 2.0** | Grants use, copying, distribution and derivative works with notices. | **Yes**, including internal business use. | Prohibits substantial hosted/managed access, but does not generally prohibit selling copies or charging for a fork. Its patent grant explicitly contemplates sale subject to limitations. | Hosted-access restriction, not a free-of-charge licence. Source-available. |
-| **Redis Source Available License v2 (RSALv2)** | Grants use/copy/distribution/derivatives subject to conditions. | Yes, including internal commercial use. | Restricts making functionality of original or modified version available to third parties as a service or through distribution; not a price-only rule. Patent grant expressly references sale, subject to limitations. It can block free third-party service/distribution and does not forbid all paid copies as such. | Too restrictive on free provision and does not encode the desired no-charge boundary. Source-available. |
-| **Business Source License 1.1 (BSL)** | Grants copy/modify/derivatives/redistribution, generally for non-production use; the licensor defines an Additional Use Grant and Change Date/Change License. | Production/business use depends on the grant; noncompliant use requires purchase of a commercial licence or stopping use. | Not a durable no-fee guarantee: it expressly contemplates charging for commercial licences and changes to an open-source Change License (usually after up to four years). | Conflicts with free-for-everyone owner policy and long-term restriction. Source-available during its term. |
-| **GPL/AGPL (including strong copyleft)** | Yes; modified covered code must be redistributed under the same freedoms/terms, subject to each licence. | **Yes.** Commercial internal and external uses are allowed. | Copyleft preserves downstream rights/source obligations, not a no-price rule. The GPL expressly permits charging any price for copies; paid SaaS is not generally prohibited by GPL, and AGPL's network source obligation is not a ban on charging. | Preserves forks' licence freedoms but explicitly fails the no-charge requirement. OSI open source. |
-| **MIT / Apache-2.0 / MPL-2.0** | Yes. | Yes. | Permit commercial distribution/sale; MPL copyleft requires source for covered files on distribution but does not prohibit a fee. | Fail the price rule. OSI open source. |
+| **Apache-2.0 + Commons Clause v1.0** | Yes, subject to base/condition notices and Apache obligations. | **Yes.** Commercial internal use is generally allowed; "Sell" concerns provision to third parties for consideration. | Restricts practicing licensed rights to provide a product/service for consideration where its value derives entirely or substantially from Software functionality; the definition expressly includes qualifying hosting and related support/consulting. | **Preferred candidate and practical fit for the revised boundary.** It does not establish an objective test for every fork/product and does not bind the licensor to the owner's separate free-official-ArtSniffer policy. Source-available, not OSI open source. |
+| **Non-Profit Open Software License 3.0 (NPOSL-3.0)** | Yes, but downstream distribution under NPOSL carries nonprofit representations and licensing conditions. | The text's distribution conditions constrain commercial distribution; it is not a general permission for for-profit entities to redistribute under NPOSL. | Licensor must represent that it is a not-for-profit organization deriving no revenue from distribution of the work/derivatives or related support/services. A recipient may distribute under NPOSL only if making a corresponding not-for-profit/no-revenue representation; otherwise the text directs distribution under OSL 3.0 with clear notices. | Relevant to a no-revenue model, but poorly matched: the organisational and zero-revenue conditions are broader/different than the owner's sale/value boundary and may not fit the owner or ordinary commercial redistribution. OSI-approved, unlike the preferred Commons Clause combination. |
+| **PolyForm Perimeter 1.0.1** | Copying, modification and redistribution are granted with notices, for permitted purposes. | Internal business use is generally permitted. | Forbids providing others any product that competes with the software, whether free or paid and regardless of interface/deployment. This can bar free competitive forks/services, while it is a competition restriction rather than a sale/value test. No Other Rights permits the licensor to grant others rights. | Wrong axis: over-restricts free competing provision and does not supply the selected sale/value boundary. Source-available. |
+| **Elastic License 2.0** | Grants use, copying, distribution and derivative works with notices. | **Yes**, including internal business use. | Prohibits substantial hosted/managed access, but does not generally prohibit selling copies or charging for a fork. Its patent grant explicitly contemplates sale subject to limitations. | Hosted-access restriction, not the selected sale/value restriction. Source-available. |
+| **Redis Source Available License v2 (RSALv2)** | Grants use/copy/distribution/derivatives subject to conditions. | Yes, including internal commercial use. | Restricts making functionality of original or modified version available to third parties as a service or through distribution; not a price-only rule. Patent grant expressly references sale, subject to limitations. It can block free third-party service/distribution and does not forbid all paid copies as such. | Too restrictive on free provision and does not encode the selected sale/value boundary. Source-available. |
+| **Business Source License 1.1 (BSL)** | Grants copy/modify/derivatives/redistribution, generally for non-production use; the licensor defines an Additional Use Grant and Change Date/Change License. | Production/business use depends on the grant; noncompliant use requires purchase of a commercial licence or stopping use. | Not a durable no-fee guarantee: it expressly contemplates charging for commercial licences and changes to an open-source Change License (usually after up to four years). | Conflicts with the owner's intent to keep official ArtSniffer free and does not provide the selected value-based sale boundary. Source-available during its term. |
+| **GPL/AGPL (including strong copyleft)** | Yes; modified covered code must be redistributed under the same freedoms/terms, subject to each licence. | **Yes.** Commercial internal and external uses are allowed. | Copyleft preserves downstream rights/source obligations, not a sale restriction. The GPL expressly permits charging any price for copies; paid SaaS is not generally prohibited by GPL, and AGPL's network source obligation is not a ban on charging. | Preserves forks' licence freedoms but does not impose the selected sale/value restriction. OSI open source. |
+| **MIT / Apache-2.0 / MPL-2.0** | Yes. | Yes. | Permit commercial distribution/sale; MPL copyleft requires source for covered files on distribution but does not prohibit a fee. | Do not impose the selected sale/value restriction. OSI open source. |
 
-No candidate evaluated is recommended as exactly satisfying the clarified owner intent. In
-particular, the gap is not merely the sale of copies: the policy also addresses advertising,
-sponsorship, paid ArtSniffer-specific work and services, branded goods, and purpose-made educational
-products, while carving out independent media/business, genuinely optional gifts and at-cost
-infrastructure sharing. Standard source-available terms that restrict competition or hosted access
-are not equivalent to this no-profit rule, and open-source copyleft rules expressly preserve
-commercial sale.
+Apache-2.0 plus Commons Clause is the preferred practical candidate for the revised policy direction,
+not an adopted licence or a perfect resolution of every interpretation. Its substantial-value
+standard is the core match; the owner's acceptance of that standard means the earlier requirement to
+independently ban peripheral monetisation is no longer a criterion for rejecting it. Professional
+review and the owner's separate policy about official ArtSniffer remain necessary.
 
 ### PolyForm Noncommercial: why not
 
@@ -318,7 +290,23 @@ use and has an as-is/no-liability clause. It is source-available, not OSI open s
 Rights reserves the licensor's ability to grant other licences, which also conflicts with treating
 it as a binding no-exceptions promise by the owner.
 
-### Commons Clause: FAQ-based boundary
+### NPOSL 3.0: why not preferred
+
+The OSI-published NPOSL 3.0 text amends OSL 3.0. Its amendment requires the licensor to represent
+that it is a not-for-profit organisation deriving no revenue from distributing the original work
+or derivatives, or from related support/services. A recipient may distribute under NPOSL only if
+they also make the specified not-for-profit/no-revenue representation; otherwise the licence directs
+distribution under OSL 3.0 with clear notices. The text is therefore not simply a prohibition on
+selling software whose value derives substantially from its functionality.
+
+This is a mismatch for the owner's chosen rule: the not-for-profit-organisation condition may not
+fit the owner or downstream redistributors, and the zero-revenue condition for distribution and
+related services can be broader than the accepted value-based sale boundary. It can constrain
+commercial redistribution rather than merely sale of ArtSniffer or a substantially
+ArtSniffer-derived offering. NPOSL is an established OSI-approved licence, but that status does not
+make it the right fit; its organisational/revenue model differs materially from the policy direction.
+
+### Commons Clause: preferred practical candidate and boundaries
 
 The operative Commons Clause v1.0 excludes the right to "Sell" where someone provides to third
 parties for consideration a product/service whose value derives entirely or substantially from
@@ -329,35 +317,21 @@ not substantially the licensed software itself. The FAQ describes merely renamin
 function/API names, or offering the same functionality as SaaS as still restricted; it says
 "substantially" means for the most part/essentially.
 
-This fits several examples: an ordinary paid VPS is not by itself a product whose value
-substantially derives from ArtSniffer; a company can generally run the software internally; and a
-genuinely unrelated commercial product is not barred merely for interoperability. A paid hosted
-ArtSniffer service, repackaged copy, or lightly changed fork would likely fall within the intended
-Sell restriction where its value remains substantially ArtSniffer functionality. The owner's
-at-cost cost-sharing example also is not profit or consideration beyond actual shared expenses.
+This aligns closely with the owner's revised direction: a paid ArtSniffer copy or hosted offering
+whose value derives substantially from its functionality is within the stated restriction, while an
+ordinary paid VPS, internal business use, or a separately valuable product is not barred solely
+because it runs or interoperates with ArtSniffer. The Clause focuses on a recipient practicing
+licensed rights to provide to third parties for consideration; it is not a general noncommercial-use
+restriction.
 
-It does **not** reliably promise the broader policy. The official FAQ explicitly permits selling
-derivatives/products when value is added. There is no objective threshold that guarantees that a
-substantially modified but "fundamentally ArtSniffer" application remains substantially the licensed
-Software as a matter of every fact pattern. Its Sell test concerns providing a product/service to
-third parties for consideration; it does not clearly reach every profit stream identified by the
-owner, such as sponsorship in exchange for promotion, advertising inside the application,
-ArtSniffer-branded merchandise, development bounties or purpose-made training products. The FAQ's
-allowance for value-added derivatives and consulting also makes the boundary for paid
-ArtSniffer-specific support/work uncertain. The clause is not a share-alike condition requiring all
-ArtSniffer-derived work to remain under it.
-
-For the owner's examples, personal/research use, modification, free redistribution and business
-internal use are generally permitted. Paid hosting/access to ArtSniffer itself is within the
-restricted category when its value is substantially ArtSniffer functionality; a generic VPS
-provider or independently valuable product is not barred merely for making infrastructure or
-interoperating software available. Genuine optional donations and reimbursement limited to actual
-shared costs are distinct from profit. Fees for related hosting/consulting/support are named, but
-the substantial-value test still applies; the official FAQ permits consulting and value-added
-products in some cases. Modified copies may be redistributed, but charging for them is prohibited
-only when they meet the Sell test, not by an express downstream no-fee/share-alike rule. The
-condition does not establish a general ban on advertising, sponsorship, project-branded goods,
-paid media/training or paid development specifically concerning ArtSniffer.
+The owner accepts the Clause's substantial-value boundary despite the interpretive judgment it
+requires. The official FAQ says value-added derivatives/products may be sold when the product's
+value is not substantially the licensed software itself. The text does not define a bright-line
+threshold for when a fork, wrapper, or product's value derives substantially from the Software, so
+individual cases may remain uncertain. Under the revised direction, this is a known limitation of
+the chosen practical fit, not a reason to require separate prohibitions on every peripheral
+ArtSniffer-related revenue stream. The Clause is not share-alike: it does not require every
+ArtSniffer-derived work to remain subject to the condition.
 
 Apache-2.0 requires its licence and relevant copyright/attribution notices to be retained and
 modified files to note changes; the Commons Clause condition must also accompany the licence
@@ -365,17 +339,15 @@ notice. Apache grants contributor patent rights subject to its patent-litigation
 Commons Clause supplies no separate patent grant. Apache has no copyleft requirement to publish
 modification source, and its redistribution terms permit licensing modifications/derivatives on
 different terms, subject to complying with the base and Sell restriction. The combination is
-source-available, not OSI open source. The copyright holder retains its rights and can separately
-license them, so the standard text does not commit MuffinzCat to the same no-charge rule.
+source-available, not OSI open source, because the additional Sell restriction narrows commercial
+rights granted by Apache-2.0. The copyright holder retains its rights and can separately license
+them; the official Commons Clause FAQ describes the condition as allowing licensors to negotiate
+for uses it restricts.
 
-Most importantly, neither Apache nor Commons Clause binds the licensor not to offer separate
-commercial terms for rights it owns. The official Commons Clause was designed to let its licensors
-negotiate for prohibited sales. It therefore conflicts with the owner's explicit no-special-
-licence/no-owner-sale principle unless a separate enforceable commitment addresses it.
-
-Do not adopt Apache + Commons Clause while describing it as guaranteeing no profit from every
-ArtSniffer-specific good/service, that every fundamentally ArtSniffer-derived fork remains free, or
-that MuffinzCat can never monetise ArtSniffer.
+The Clause limits rights granted to recipients. Apache-2.0 plus the Clause does not itself bind
+MuffinzCat, as licensor/copyright holder, not to offer different terms. The owner separately states
+that official ArtSniffer should remain free; that policy is not made irrevocable by this
+combination. Do not describe the candidate as eliminating this owner-binding issue.
 
 ### Other near-matches and OSI boundary
 
@@ -396,27 +368,24 @@ These are not free-for-everyone sale prohibitions.
 
 The GPL/AGPL preserve source and downstream freedoms for covered derivatives, but the GNU FAQ
 explicitly says a distributor may charge any price; recipients can then redistribute for free or
-for a fee. Copyleft cannot make forks free of charge. Open Source Definition criterion 1 requires
-that the licence not restrict selling/giving away the software and not require a royalty/fee for
-sale. A licence prohibiting anyone from charging for ArtSniffer or its derivative copies therefore
-cannot be OSI open source. Any accurate model with the intended price restriction would be
-**source-available, not OSI open source**.
+for a fee. The Commons Clause condition removes a right to sell that Apache-2.0 would otherwise
+grant. The Apache-plus-Commons-Clause combination is therefore **source-available, not OSI open
+source**, notwithstanding its Apache base. NPOSL 3.0 is a separate OSI-listed licence with
+different not-for-profit distribution conditions; it is not the selected candidate.
 
-This audit found no established candidate that simultaneously: (1) permits independent
-commercial/internal use; (2) permits modification and redistribution; (3) prohibits profit
-specifically from ArtSniffer, fundamentally ArtSniffer-derived forks, and ArtSniffer-specific goods
-or services while preserving the stated independent-activity and at-cost exceptions; and (4) binds
-the owner to the same policy. These conditions do not establish that no such text exists anywhere;
-they mean no reviewed professional standard has been verified as a clear match. Do not patch a
-standard text or invent an informal "no profit" addendum to force a fit.
+The preferred Apache-2.0 plus Commons Clause candidate addresses recipient sales within the
+accepted value-based boundary, but does not bind the owner to keep official ArtSniffer free. The
+owner's separate policy and any mechanism for binding the owner remain outside the Clause itself.
+Professional review is required before adoption; do not treat this report as legal terms or add
+informal language to the standard texts.
 
 ## Dependency and redistribution compatibility
 
 **ArtSniffer's own-source licence is separate from every dependency licence.** Imports of independent
 permissively licensed packages do not generally require the importer itself to adopt their
 licence. Redistributing those packages, their modified files or a bundled executable/container
-does require compliance with their terms. An ArtSniffer-specific free-of-charge condition cannot
-replace their notices or make their own copies noncommercial.
+does require compliance with their terms. Neither Apache-2.0 nor a Commons Clause condition
+replaces their notices or changes the terms for their own copies.
 
 The default application has no declared runtime dependencies. Optional `benchmark-dinov2` adds
 Pillow, Torch and Transformers and their transitive dependencies. The lock also includes development
@@ -498,7 +467,7 @@ Important consequences:
   MIT exceptions. MPL 2.0 sections 3.1-3.4 require covered source, including modifications, to remain
   under MPL, preserve notices and make that source available when executables are distributed.
   Section 3.3 permits separately licensed larger works. Keep tqdm distinct; do not impose an
-  ArtSniffer-specific free-of-charge restriction on its covered source. Its presence is not an
+  ArtSniffer-specific sale restriction on its covered source. Its presence is not an
   automatic prohibition on licensing independent ArtSniffer code under a compatible condition.
 - **NVIDIA clearance is unresolved for bundled distribution.** Thirteen packages lack a licence
   declaration in the retrieved metadata, and others expressly identify proprietary terms.
@@ -560,53 +529,41 @@ source by themselves, but remain gates for model use, bundling and future commer
 
 ## Adoption decision and manual-review gates
 
-**Do not change the licence.** This is not a finding that application code is affirmatively
-ineligible for licensing: no affirmative third-party application-code blocker was found. It is
-the finding that no reviewed standard licence matches the clarified restrictions and the available
-repository evidence does not establish full title/authority. Unresolved binary dependency/EULA
-questions primarily concern distribution of those artefacts, not licensing independent
-ArtSniffer-owned source.
+**Do not change the licence in this audit.** No affirmative third-party application-code blocker was
+found, but repository evidence does not establish full title/authority. The owner's preferred
+direction is Apache-2.0 plus Commons Clause v1.0; this is a candidate for professional review, not
+an adopted licence or a legal conclusion. Unresolved binary dependency/EULA questions primarily
+concern distribution of those artefacts, not licensing independent ArtSniffer-owned source.
 
 The owner/legal reviewer should resolve:
 
-1. Commission professional legal/licensing review before translating the broader no-profit policy
-   into enforceable terms. Any reviewed approach must distinguish profit specifically derived from
-   ArtSniffer/fundamentally ArtSniffer-derived forks and ArtSniffer-specific goods/services from
-   independent commercial activity, including generic infrastructure, hardware, separately valuable
-   integrations and independent media. It also needs workable boundaries for the owner's exceptions:
-   genuinely optional donations, non-profit reimbursement of actual costs, ordinary employment,
-   independent media and products, developer-incurred platform and distribution costs, and hardware
-   preinstallation without an ArtSniffer-specific charge or price premium. The review should also
-   address the intended prohibition on advertising/sponsorship, paid development work and
-   ArtSniffer-specific goods/services. "Fundamentally ArtSniffer" and "profit" need legally workable
-   definitions that resist relabelling without capturing unrelated activity.
-2. How the owner can be bound by the same no-charge rule. Standard non-exclusive licences normally
-   govern recipients' exercise of licensed rights, not the copyright holder's retained rights.
-   Consider enforceability, irrevocability, future owners and whether a public covenant or another
-   legal structure is needed. A statement of intent alone may not bind a future rights-holder.
-3. How to distinguish a genuinely voluntary gift or reimbursement of actual costs from payment for
-   access, features, support, work, services, promotion or other benefits. Preserve the clarified
-   allowance for non-profit cost sharing; it must not become disguised profit or a service fee.
-4. The copyright holder's identity/authority, any employer/client rights, contributor permissions,
-   code-reference/snippet provenance and any earlier private/public grants not in Git. Future
-   contributor terms must be compatible with the same downstream no-charge/fork policy; a DCO or
-   GitHub account identity alone is not a copyright assignment.
-5. Exact checkpoint licences/revisions and artefact-level dependency/EULA/notices for anything
-   actually bundled. Keep these obligations distinct from licensing independent project source.
+1. Obtain professional legal/licensing review of Apache-2.0 plus Commons Clause v1.0 before any
+   adoption. Review the condition's application to original copies, forks, hosted offerings and
+   value-added products, including the substantial-value test and required notices. Do not draft
+   custom or informal terms in place of that review.
+2. Keep the owner's policy that official ArtSniffer should remain free distinct from recipient
+   rights under the candidate. The Commons Clause does not bind the licensor against offering
+   separate terms. Review whether and how the owner or future rights-holders can be bound to the
+   separate policy; do not describe it as irrevocable under the candidate.
+3. Confirm the copyright holder's identity/authority, any employer/client rights, contributor
+   permissions, code-reference/snippet provenance and any earlier private/public grants not in Git.
+   A DCO or GitHub account identity alone is not a copyright assignment.
+4. Verify exact checkpoint licences/revisions and artefact-level dependency/EULA/notices for
+   anything actually bundled. Keep these obligations distinct from licensing independent project
+   source.
 
-If professional review finds a standard licence and a binding owner arrangement that clearly
-match, document that exact decision first. If it requires an altered standard text, newly written
-condition or ancillary covenant, do not draft it as an informal report amendment: obtain and use
-professionally prepared legal terms and review contributor/ownership authority before changing
-`LICENSE`, README, NOTICE or package metadata. Preserve all independent third-party terms and explain
-the scope/date and earlier-grant implications.
+Do not add an Apache or Commons Clause licence file or change notices/metadata until professional
+review and the owner's decision are complete. If the eventual arrangement requires altered
+standard text or a separate owner commitment, use professionally prepared terms and review
+contributor/ownership authority. Preserve all independent third-party terms and explain the
+scope/date and earlier-grant implications.
 
 No licence adopted now means the source remains under the observed all-rights-reserved notice,
-subject to law, GitHub terms and existing permissions; the intended permissions and no-profit policy
-are not implemented or legally established by this report. If an eventual enforceable condition
-prohibits profit from ArtSniffer and its derivatives, it would be **source-available, not OSI open
-source**. It should preserve the owner's stated independent commercial-use exceptions. This report
-does not imply that anyone (including the owner) is already bound by the policy or future terms.
+subject to law, GitHub terms and existing permissions; the candidate rights are not granted by this
+report. The owner states that official ArtSniffer should remain free, but that policy is not
+implemented as an enforceable or irrevocable commitment here. If adopted, Apache-2.0 plus Commons
+Clause would be **source-available, not OSI open source** and would restrict recipient sales within
+the condition's value-based scope; it would not itself bind the owner to the separate policy.
 
 ## Official and authoritative sources
 
@@ -625,7 +582,8 @@ inventory; they evidence metadata rather than replacing licence texts.
 | Official PolyForm Strict text used for exclusion | <https://github.com/polyformproject/polyformproject.org/blob/main/licenses/strict/1.0.0.txt> |
 | Commons Clause condition and official FAQ | <https://commonsclause.com/> |
 | Commons Clause site's official source, pinned revision | <https://github.com/fossas/commons-clause/blob/a83b2c7466e31f6cb3b285b08319e8af357ea244/src/index.html> |
-| Apache-2.0 official text | <https://www.apache.org/licenses/LICENSE-2.0> and <https://www.apache.org/licenses/LICENSE-2.0.txt>; complete terms retrieved via <https://github.com/apache/.github/blob/main/LICENSE> |
+| Apache-2.0 official text | <https://www.apache.org/licenses/LICENSE-2.0> and <https://www.apache.org/licenses/LICENSE-2.0.txt> (official-source search evidence; direct retrieval unavailable) |
+| Non-Profit Open Software License 3.0 | <https://opensource.org/license/NPOSL-3.0> (OSI-published text; search evidence); <https://github.com/spdx/license-list-data/blob/main/text/NPOSL-3.0.txt> (text copy) |
 | MIT text/reference | <https://choosealicense.com/licenses/mit/> and <https://github.com/github/choosealicense.com/blob/gh-pages/_licenses/mit.txt> |
 | CC0 legal text | <https://creativecommons.org/publicdomain/zero/1.0/legalcode>; full text read in github/gitignore LICENSE linked above |
 | Open Source Definition, especially sections 1 and 6 | <https://opensource.org/osd> (official search evidence) |
