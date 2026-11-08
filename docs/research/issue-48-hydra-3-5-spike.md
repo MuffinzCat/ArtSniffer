@@ -18,10 +18,10 @@ adoption is undecided.**
   about 5.9% slower than the historical 16-thread reference, while the benchmark process used
   7.93 CPU cores on a 16-logical-CPU host. Twelve threads used substantially more CPU without
   improving latency and had greater timing variability.
-- The only semantic result is encouraging but very small: for one existing contrast annotation,
-  the expected strong match ranked above the weak match. Three images and one annotation cannot
-  establish general accuracy, per-tag error rates, calibration quality, or suitability for
-  production.
+- The original three-image benchmark provided one-contrast feasibility evidence: the expected
+  strong match ranked above the weak match. A later eight-image Stage 0 evaluation validated the
+  blinded workflow and provided limited exploratory semantic evidence. Neither establishes
+  representative accuracy, calibration quality, or suitability for adoption.
 - The benchmark makes memory appear practical on this host at approximately 3.0–3.3 GiB
   high-water RSS. CPU capacity and service contention, rather than RAM capacity, are the more
   salient operational concern. A bounded background analysis-once-and-cache workflow may tolerate
@@ -94,6 +94,42 @@ independent human ground truth. Three images and one contrast are insufficient t
 precision, recall, false-positive/negative rates, calibration quality, robustness across art
 styles, or production suitability. The shared-tag counts and cosine values do not establish that
 the predictions are correct.
+
+### Stage 0: workflow validation and exploratory semantic findings
+
+Stage 0 completed the privacy-preserving evaluation workflow on eight blindly annotated and locked
+images: selection, annotation, locking, frozen provenance, opaque staging, Linux validation, CPU
+inference, approved-label filtering and comparison against locked annotations. Hydra 3.5 / JTP-3.5
+used eight intra-op threads, one inter-op thread, unchanged `f1.0@0.1` calibration and implications
+disabled. All eight images completed successfully in the successful fresh run without retries.
+Only the 23 approved Hydra labels mapped from 21 evaluation concepts were persisted: 184 raw
+values and 46 calibrated approved-label selections. Rating outputs were neither persisted nor
+evaluated; generated semantics provide no safety clearance. The locked annotations remained
+unchanged.
+
+Across 160 eligible mapped-label decisions, exploratory totals were **TP 43, FP 2, FN 16 and
+TN 99**, giving micro precision **95.6%**, recall **72.9%** and F1 **82.7%**. Seventeen uncertain
+and seven not-observable annotations were excluded, not treated as negatives. These results
+describe eight non-representative images and must not be generalised to deployment quality.
+
+Character count was exactly correct on all eight images, with exactly one count label selected
+each time. Feline and glasses detection showed no observed misses, but feline had no eligible
+negatives; collar likewise lacked eligible negatives. Misses were concentrated in framing, poses
+and tails. Neither framing label nor wings was emitted despite positive support. Eligible false
+positives occurred for hand holding and fox. Hand holding, wolf, dragon, antlers, scales and walking
+had zero human-positive support: their positive detection remains **untested**, not demonstrated
+to fail.
+
+The first Stage 0 attempt stopped before image processing because the dedicated runner did not
+make the pinned Hydra checkout importable under isolated Python execution. That failed run was
+preserved. Runner v2 corrected the import-path issue and added privacy-safe diagnostic evidence.
+A separate startup-only diagnostic successfully verified import, checkpoint/model initialisation,
+CPU placement and calibration without opening artwork or performing inference. The fresh Stage 0
+run then completed all eight inputs. This infrastructure failure is not model-quality evidence.
+
+Stage 0 validates the workflow only. It justifies improved coverage in a new blindly annotated,
+locked 24-image Stage 1 pilot with the unchanged baseline calibration, not threshold/calibration
+tuning from Stage 0, a Stage 0 rerun, adoption or ArtSniffer integration.
 
 ### CPU thread-scaling measurements
 
@@ -200,11 +236,13 @@ performance question remains.
 
 **Continue evaluation; do not adopt or integrate yet.** The pinned Hydra 3.5 checkpoint has
 demonstrated feasible CPU inference on the target server and a promising result on one existing
-contrast. Eight intra-op and one inter-op thread is the best tested balance for a potential
-background-worker follow-up. However, the semantic evidence is far too small to establish model
-quality, calibration and false-positive behaviour remain unevaluated, and licensing/model-data
-questions are unresolved. The next decision-relevant work is a rights-cleared, human-judged
-semantic-quality study, not implementation.
+contrast. Stage 0 additionally validated the workflow and provided limited exploratory
+false-positive/false-negative evidence. Eight intra-op and one inter-op thread is the best tested
+balance for a potential background-worker follow-up. However, the semantic evidence is far too
+small for adoption: representative semantic quality and calibration remain unevaluated, and
+licensing/model-data questions are unresolved. The next decision-relevant work is the rights-cleared,
+blindly annotated and locked Stage 1 semantic-quality pilot with unchanged baseline calibration,
+not implementation.
 
 ## Sources and related work
 
