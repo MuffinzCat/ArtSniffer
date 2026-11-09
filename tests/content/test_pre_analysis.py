@@ -10,18 +10,16 @@ import pytest
 
 import artsniffer.content.pre_analysis as pre_analysis
 from artsniffer.content.rating import ContentRating
-from artsniffer.content.service_permission_evaluation import (
+from artsniffer.content.service_permissions import (
     ServiceContentPermissionDecision,
     ServiceContentPermissionReason,
+    ServiceContentPermissions,
 )
-from artsniffer.content.service_permissions import ServiceContentPermissions
 from artsniffer.profiles.content_policy import (
-    ProfileContentPolicy,
-    ProfileContentPolicyMode,
-)
-from artsniffer.profiles.content_policy_evaluation import (
     ContentPolicyDecision,
     ContentPolicyReason,
+    ProfileContentPolicy,
+    ProfileContentPolicyMode,
     evaluate_content_policy,
 )
 from artsniffer.safety.decision import SafetyGateDecision, SafetyGateReason
@@ -259,12 +257,15 @@ def test_result_is_immutable() -> None:
 
 
 _VALID_SAFETY_CLEARED_SUBJECT = _cleared_subject()
+
 _VALID_PRE_ANALYSIS_DECISION = pre_analysis.PreAnalysisDecision(
     pre_analysis.PreAnalysisReason.APPROVED
 )
+
 _ALLOWED_SERVICE_DECISION = ServiceContentPermissionDecision(
     True, ServiceContentPermissionReason.ALLOWED
 )
+
 _ALLOWED_PROFILE_DECISION = ContentPolicyDecision(True, ContentPolicyReason.ALLOWED)
 
 
@@ -452,10 +453,8 @@ def test_pre_analysis_module_has_no_provider_recommendation_or_destination_depen
     tree = ast.parse(module_path.read_text(encoding="utf-8"))
     allowed_artsniffer_modules = {
         "artsniffer.content.rating",
-        "artsniffer.content.service_permission_evaluation",
         "artsniffer.content.service_permissions",
         "artsniffer.profiles.content_policy",
-        "artsniffer.profiles.content_policy_evaluation",
         "artsniffer.safety.subject",
     }
 
