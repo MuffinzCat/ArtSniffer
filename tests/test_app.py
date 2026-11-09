@@ -22,6 +22,7 @@ from artsniffer.references.observation import ReferenceItemObservation
         (["--help"], "references"),
         (["references", "--help"], "scan-local"),
         (["references", "scan-local", "--help"], "--source-id"),
+        (["references", "diff-local", "--help"], "--against"),
     ],
 )
 def test_help(argv: list[str], expected: str, capsys: pytest.CaptureFixture[str]) -> None:
@@ -46,6 +47,10 @@ def test_help(argv: list[str], expected: str, capsys: pytest.CaptureFixture[str]
         ["references", "scan-local", "--source-id", "local"],
         ["references", "scan-local", "library", "--source-id"],
         ["references", "scan-local", "library", "--source-id", "local", "--unknown"],
+        ["references", "diff-local"],
+        ["references", "diff-local", "library", "--source-id", "local"],
+        ["references", "diff-local", "library", "--against", "baseline.json"],
+        ["references", "diff-local", "library", "--source-id", "local", "--against"],
     ],
 )
 def test_usage_errors(argv: list[str], capsys: pytest.CaptureFixture[str]) -> None:
@@ -66,6 +71,7 @@ def test_empty_scan(tmp_path: Path, capsys: pytest.CaptureFixture[str], as_json:
     captured = capsys.readouterr()
     if as_json:
         assert json.loads(captured.out) == {
+            "schema_version": 1,
             "source_id": "local",
             "root": str(tmp_path),
             "item_count": 0,
@@ -103,6 +109,7 @@ def test_populated_scan_preserves_order_values_and_supplied_root(
     assert first.err == ""
     if as_json:
         assert json.loads(first.out) == {
+            "schema_version": 1,
             "source_id": " exact source ",
             "root": supplied_root,
             "item_count": 3,
@@ -237,10 +244,13 @@ def test_cli_has_only_agreed_dependencies() -> None:
     allowed = {
         "argparse",
         "json",
+        "re",
         "sys",
         "collections.abc",
         "pathlib",
         "artsniffer.references.local_filesystem",
+        "artsniffer.references.observation",
+        "artsniffer.references.snapshot_diff",
     }
     for node in ast.walk(ast.parse(module_path.read_text(encoding="utf-8"))):
         if isinstance(node, ast.Import):
