@@ -90,6 +90,26 @@ Development uses:
 - Pyright for static type checking.
 - pytest for automated testing.
 
+## Local Reference Observation
+
+`LocalFilesystemReferenceProvider(source_id, root: Path)` in
+[`artsniffer.references.local_filesystem`](src/artsniffer/references/local_filesystem.py)
+binds a canonical directory and implements the `ReferenceProvider` observation contract.
+`observe()` recursively includes hidden entries and returns a tuple sorted by exact root-relative
+POSIX path IDs, preserving filename case, whitespace and Unicode. It selects JPEG (`.jpg`/`.jpeg`),
+PNG, WebP, GIF, BMP and TIFF (`.tif`/`.tiff`) suffixes case-insensitively, without decoding images
+or establishing their validity or safety. Each file is read in bounded chunks and identified by
+`sha256:<lowercase hex digest>`; metadata never substitutes for hashing.
+
+The provider makes no intentional writes, temporary copies or caches. Symlinks and Windows junctions
+are rejected, and traversal/read failures or detected file changes abort the whole snapshot rather
+than return partial success. Use an operator-controlled, reasonably quiescent directory tree:
+portable checks do not guarantee atomic snapshots or hostile-race-resistant confinement. Filesystem
+reads may update access times or hydrate cloud-backed files.
+
+This is an observation primitive only. Application configuration, polling, temporary retrieval,
+analysis integration and OneDrive integration remain planned; it does not complete issue #39.
+
 ## Local Benchmarks
 
 Provider-neutral benchmark records live in `artsniffer.benchmark.models`, and timing runners live
