@@ -12,6 +12,17 @@ def count_changes(changes: tuple[ReferenceSnapshotChange, ...]) -> dict[str, int
     return counts
 
 
+def human_change_lines(changes: tuple[ReferenceSnapshotChange, ...]) -> list[str]:
+    """Format category counts and changed item IDs in stable order."""
+    counts = count_changes(changes)
+    lines: list[str] = []
+    for kind in ReferenceItemChangeKind:
+        lines.append(f"{kind.value.title()}: {counts[kind.value]}")
+        if kind is not ReferenceItemChangeKind.UNCHANGED:
+            lines.extend(f"  {change.source_item_id}" for change in changes if change.kind is kind)
+    return lines
+
+
 def changes_as_json(changes: tuple[ReferenceSnapshotChange, ...]) -> list[dict[str, object]]:
     """Represent every ordered change, including the absent side of additions/removals."""
     return [

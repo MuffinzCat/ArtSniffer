@@ -10,6 +10,29 @@ ArtSniffer is currently in early domain and infrastructure development.
 
 Core safety, content-policy, analysis, caching, and recommendation primitives exist. Reference-library and source integrations, end-to-end application orchestration, delivery services, and production deployment remain planned.
 
+## Start here
+
+The runnable pieces today are the local-reference commands and a small synthetic recommendation
+demo; ArtSniffer is not yet a complete discovery-to-delivery service. Start with the [status](#status)
+and the [command-line entry point](src/artsniffer/cli.py). It registers `references` commands in
+[references.py](src/artsniffer/commands/references.py), which handles one-off scans and live
+comparisons.
+
+To follow a local scan, read [LocalFilesystemReferenceProvider.observe()](src/artsniffer/references/local_filesystem.py)
+and its [focused tests](tests/references/test_local_filesystem.py): it walks the folder and hashes
+each supported file's contents. Then follow [snapshot reading and writing](src/artsniffer/commands/snapshot_file.py),
+[snapshot commands](src/artsniffer/commands/snapshot_commands.py), [live comparison](src/artsniffer/commands/references.py),
+[refresh](src/artsniffer/commands/refresh_local.py), and [safe file writing](src/artsniffer/commands/safe_write.py).
+The related tests are in [test_references.py](tests/commands/test_references.py),
+[test_snapshot_commands.py](tests/commands/test_snapshot_commands.py),
+[test_refresh_local.py](tests/commands/test_refresh_local.py),
+[test_snapshot_file.py](tests/commands/test_snapshot_file.py), and
+[test_safe_write.py](tests/commands/test_safe_write.py).
+
+After that, [cached image analysis](src/artsniffer/analysis/cached_image.py) and
+[visual recommendation scoring](src/artsniffer/recommendations/visual_scoring.py) are useful
+standalone concepts to explore; they are not yet joined into an application pipeline.
+
 ## Current Domain Boundaries
 
 The current domain primitives include subject-bound unconditional safety evaluation, profile

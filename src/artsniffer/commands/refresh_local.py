@@ -5,12 +5,16 @@ import json
 import sys
 from pathlib import Path
 
-from artsniffer.commands.reference_change_output import changes_as_json, count_changes
+from artsniffer.commands.reference_change_output import (
+    changes_as_json,
+    count_changes,
+    human_change_lines,
+)
 from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
 from artsniffer.commands.safe_write import safe_write
 from artsniffer.commands.snapshot_file import encode_snapshot, read_snapshot
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
-from artsniffer.references.observation import ReferenceItemChangeKind, ReferenceItemObservation
+from artsniffer.references.observation import ReferenceItemObservation
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
 
 
@@ -46,7 +50,6 @@ def _human_output(
     changes: tuple[ReferenceSnapshotChange, ...],
     state_written: bool,
 ) -> str:
-    counts = count_changes(changes)
     status = "State updated" if state_written else "Dry run; state not written"
     lines = [
         f"Source: {args.source_id}",
@@ -54,10 +57,7 @@ def _human_output(
         f"State: {args.state}",
         f"Status: {status}",
     ]
-    for kind in ReferenceItemChangeKind:
-        lines.append(f"{kind.value.title()}: {counts[kind.value]}")
-        if kind is not ReferenceItemChangeKind.UNCHANGED:
-            lines.extend(f"  {change.source_item_id}" for change in changes if change.kind is kind)
+    lines.extend(human_change_lines(changes))
     return "\n".join(lines)
 
 

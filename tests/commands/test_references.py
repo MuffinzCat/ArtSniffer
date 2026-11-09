@@ -599,6 +599,7 @@ def test_reference_commands_have_only_agreed_dependencies() -> None:
         "re",
         "sys",
         "pathlib",
+        "artsniffer.commands.reference_change_output",
         "artsniffer.commands.snapshot_file",
         "artsniffer.commands.snapshot_commands",
         "artsniffer.commands.refresh_local",

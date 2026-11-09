@@ -354,10 +354,12 @@ def test_refresh_human_output_states_source_paths_status_and_counts(
     result = main(refresh_argv(root, state, as_json=False))
 
     assert result == 0
-    output = capsys.readouterr().out
-    assert f"Source: local\nRoot: {root}\nState: {state}\nStatus: State updated" in output
-    assert "Added: 1\n  added" in output
-    assert "Removed: 0" in output
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    assert captured.out == (
+        f"Source: local\nRoot: {root}\nState: {state}\nStatus: State updated\n"
+        "Added: 1\n  added\nChanged: 0\nUnchanged: 0\nRemoved: 0\n"
+    )
 
 
 def test_unexpected_refresh_errors_propagate(tmp_path: Path, monkeypatch, capsys) -> None:
