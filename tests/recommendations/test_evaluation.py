@@ -3,14 +3,13 @@
 import pytest
 
 from artsniffer.analysis.artwork import ArtworkAnalysis
-from artsniffer.profiles.profile import RecommendationProfile
-from artsniffer.profiles.reference import ProfileReferenceLink
+from artsniffer.profiles.profile import ProfileReferenceLink, RecommendationProfile
 from artsniffer.recommendations.eligibility import RecommendationEligibilityReason
 from artsniffer.recommendations.evaluation import (
     RecommendationEvaluation,
     evaluate_recommendation,
 )
-from artsniffer.references.collection_artwork import CollectionArtworkLink
+from artsniffer.references.collection import CollectionArtworkLink
 
 
 def _reference_entry(
