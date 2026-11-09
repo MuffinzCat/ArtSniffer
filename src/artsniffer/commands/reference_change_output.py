@@ -4,7 +4,7 @@ from artsniffer.references.observation import ReferenceItemChangeKind
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange
 
 
-def count_changes(changes: tuple[ReferenceSnapshotChange, ...]) -> dict[str, int]:
+def count_reference_changes(changes: tuple[ReferenceSnapshotChange, ...]) -> dict[str, int]:
     """Count each change kind in stable enum order."""
     counts = {kind.value: 0 for kind in ReferenceItemChangeKind}
     for change in changes:
@@ -12,9 +12,9 @@ def count_changes(changes: tuple[ReferenceSnapshotChange, ...]) -> dict[str, int
     return counts
 
 
-def human_change_lines(changes: tuple[ReferenceSnapshotChange, ...]) -> list[str]:
+def format_reference_change_lines(changes: tuple[ReferenceSnapshotChange, ...]) -> list[str]:
     """Format category counts and changed item IDs in stable order."""
-    counts = count_changes(changes)
+    counts = count_reference_changes(changes)
     lines: list[str] = []
     for kind in ReferenceItemChangeKind:
         lines.append(f"{kind.value.title()}: {counts[kind.value]}")
@@ -23,7 +23,9 @@ def human_change_lines(changes: tuple[ReferenceSnapshotChange, ...]) -> list[str
     return lines
 
 
-def changes_as_json(changes: tuple[ReferenceSnapshotChange, ...]) -> list[dict[str, object]]:
+def reference_changes_as_json(
+    changes: tuple[ReferenceSnapshotChange, ...],
+) -> list[dict[str, object]]:
     """Represent every ordered change, including the absent side of additions/removals."""
     return [
         {

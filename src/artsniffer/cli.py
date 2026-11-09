@@ -14,7 +14,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         epilog="Use 'artsniffer references --help' for scan, snapshot, and refresh commands.",
     )
     commands = parser.add_subparsers(dest="command", required=True)
-    references.register_commands(
+    references.register_reference_commands(
         commands.add_parser(
             "references", help="Observe local libraries and manage saved snapshots."
         )
