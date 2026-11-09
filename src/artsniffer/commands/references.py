@@ -5,11 +5,12 @@ import json
 import sys
 from pathlib import Path
 
+from artsniffer.commands.reference_change_output import count_changes, human_change_lines
 from artsniffer.commands.refresh_local import register_command as register_refresh_command
 from artsniffer.commands.snapshot_commands import register_commands as register_snapshot_commands
 from artsniffer.commands.snapshot_file import read_snapshot
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
-from artsniffer.references.observation import ReferenceItemChangeKind, ReferenceItemObservation
+from artsniffer.references.observation import ReferenceItemObservation
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
 
 
@@ -30,9 +31,6 @@ def _format_diff(
     changes: tuple[ReferenceSnapshotChange, ...],
     as_json: bool,
 ) -> str:
-    counts = {kind.value: 0 for kind in ReferenceItemChangeKind}
-    for change in changes:
-        counts[change.kind.value] += 1
     if as_json:
         return json.dumps(
             {
@@ -40,7 +38,7 @@ def _format_diff(
                 "source_id": source_id,
                 "root": root,
                 "against": against,
-                "counts": counts,
+                "counts": count_changes(changes),
                 "changes": [
                     {
                         "kind": change.kind.value,
@@ -58,10 +56,7 @@ def _format_diff(
             indent=2,
         )
     lines = [f"Source: {source_id}", f"Root: {root}", f"Against: {against}"]
-    for kind in ReferenceItemChangeKind:
-        lines.append(f"{kind.value.title()}: {counts[kind.value]}")
-        if kind is not ReferenceItemChangeKind.UNCHANGED:
-            lines.extend(f"  {change.source_item_id}" for change in changes if change.kind is kind)
+    lines.extend(human_change_lines(changes))
     return "\n".join(lines)
 
 
