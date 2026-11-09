@@ -92,6 +92,24 @@ Development uses:
 
 ## Local Reference Observation
 
+Scan a local reference library once from the command line (quote paths containing spaces):
+
+```powershell
+uv run artsniffer references scan-local "C:\References\My Library" --source-id favourites
+uv run artsniffer references scan-local "C:\References\My Library" --source-id favourites --json
+uv run artsniffer --help
+```
+
+Readable output is the default: source, supplied root, total observed item count and each item ID
+in provider order. JSON contains `source_id`, `root`, `item_count` and an `items` array of
+`source_item_id` / `content_hash` objects in the same order. JSON `root` preserves the exact argument
+text supplied by the caller, not the provider's canonical path. Expected provider/filesystem errors
+are reported on stderr with a non-zero exit status and no partial successful result.
+
+The command only observes: it does not persist, analyse, monitor, configure sources or retrieve
+temporary copies. It does not decode, validate or establish the safety of image content. The
+separate synthetic recommendation demo remains available with `uv run python -m artsniffer.demo`.
+
 `LocalFilesystemReferenceProvider(source_id, root: Path)` in
 [`artsniffer.references.local_filesystem`](src/artsniffer/references/local_filesystem.py)
 binds a canonical directory and implements the `ReferenceProvider` observation contract.
