@@ -1,2 +1,5 @@
-def main() -> None:
-    print("Hello from artsniffer!")
+"""ArtSniffer application entry point."""
+
+from artsniffer.cli import main
+
+__all__ = ["main"]
