@@ -194,6 +194,69 @@ artwork-record comparison remains separate and unchanged.
 This is an observation primitive only. Application configuration, polling, temporary retrieval,
 analysis integration and OneDrive integration remain planned; it does not complete issue #39.
 
+### Create, inspect, compare, and refresh snapshots
+
+The snapshot commands save and manage observation metadata only. Keep snapshot and state files
+outside the reference library; commands that write refuse destinations inside the scanned root.
+Paths containing spaces can be quoted directly or assigned to PowerShell variables:
+
+```powershell
+$root = "C:\References\My Library"
+$source = "favourites"
+$snapshot = "C:\References\favourites.snapshot.json"
+$state = "C:\ArtSniffer\state\favourites.json"
+$previous = "C:\References\favourites-previous.json"
+
+# One-off live scan; existing scan-local output remains available.
+uv run artsniffer references scan-local $root --source-id $source
+uv run artsniffer references scan-local $root --source-id $source --json
+
+# Create a saved snapshot, validate or inspect it, and compare two saved snapshots.
+uv run artsniffer references snapshot create $root --source-id $source --output $snapshot
+uv run artsniffer references snapshot validate $snapshot --source-id $source
+uv run artsniffer references snapshot show $snapshot --items --json
+uv run artsniffer references snapshot diff $previous $snapshot --json
+
+# Compare saved observations with a live scan, or preview/update managed state.
+uv run artsniffer references diff-local $root --source-id $source --against $snapshot
+uv run artsniffer references refresh-local $root --source-id $source --state $state --dry-run --json
+uv run artsniffer references refresh-local $root --source-id $source --state $state
+```
+
+`snapshot create` refuses an existing destination; pass `--force` to replace it. A successful
+create writes a version-1 snapshot, then prints a concise result (or command-result JSON with
+`--json`); that result JSON is separate from the snapshot file. `validate`, `show`, and snapshot
+`diff` read and strictly validate saved files without scanning a provider or rewriting either file.
+`show` lists opaque item IDs only with `--items`; JSON includes hashes when the item list is
+requested. Snapshot-to-snapshot comparisons return **0** when valid, including when differences
+exist, and retain current-item order followed by sorted removals.
+
+`refresh-local` treats missing state as empty. A successful non-dry-run refresh writes the complete
+current version-1 snapshot, including when nothing changed; `--dry-run` reports the same comparison
+without writing. Existing state is fully validated and its source ID checked before the live scan.
+Legacy unversioned snapshots and UTF-8 files with or without a BOM can be read; merely validating,
+showing, or comparing a legacy snapshot never migrates it. A create or successful refresh writes
+version 1.
+
+Snapshot/state files contain the source ID, supplied root text, opaque item IDs, and content hashes;
+they contain no artwork bytes and are not `ArtworkRecord` identities or analysis-cache records.
+These commands do not analyse images, use the SQLite analysis cache, or provide history/monitoring.
+
+Before publication, output is completely serialised and written to a task-owned temporary file in
+the destination directory, then flushed and closed. Create-only publication does not overwrite an
+existing destination; `--force` and refresh of existing state use same-directory replacement. A
+first refresh uses create-only publication. Expected failures before publication preserve existing
+file bytes, and only the task-owned temporary file is cleaned up. Atomicity depends on the host
+filesystem's support and semantics; this is not a crash-durability guarantee, and the filesystem
+scan itself is not atomic. Reads may update access times or hydrate cloud-backed files, as described
+above.
+
+Expected filesystem, provider, validation, overwrite, and write errors return **1** with diagnostics
+on stderr and no success output. Successful commands return **0**; argparse usage errors return
+**2**. The live provider remains read-only, but it does not make reference content valid or safe.
+Monitoring, OneDrive, temporary image retrieval, safety/analyser orchestration, and cache
+integration remain unfinished work under issue #39 and related issues.
+
 ## Local Benchmarks
 
 Provider-neutral benchmark records live in `artsniffer.benchmark.models`, and timing runners live
