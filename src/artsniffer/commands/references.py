@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from artsniffer.commands.refresh_local import register_command as register_refresh_command
 from artsniffer.commands.snapshot_commands import register_commands as register_snapshot_commands
 from artsniffer.commands.snapshot_file import read_snapshot
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
@@ -88,6 +89,11 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
         "snapshot", help="Create, validate, inspect, and compare saved local snapshots."
     )
     register_snapshot_commands(snapshot)
+
+    refresh = reference_commands.add_parser(
+        "refresh-local", help="Compare a local library and safely refresh managed snapshot state."
+    )
+    register_refresh_command(refresh)
 
 
 def run(args: argparse.Namespace) -> int:

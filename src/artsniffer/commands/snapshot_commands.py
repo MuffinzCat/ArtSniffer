@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from artsniffer.commands.reference_change_output import changes_as_json, count_changes
 from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
 from artsniffer.commands.safe_write import safe_write
 from artsniffer.commands.snapshot_file import (
@@ -14,7 +15,7 @@ from artsniffer.commands.snapshot_file import (
 )
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
 from artsniffer.references.observation import ReferenceItemChangeKind
-from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
+from artsniffer.references.snapshot_diff import diff_reference_snapshots
 
 
 def _format_version(snapshot: ReferenceSnapshotFile) -> str:
@@ -41,29 +42,6 @@ def _read(path: Path, label: str) -> ReferenceSnapshotFile:
         return read_snapshot(path)
     except (OSError, ValueError) as error:
         raise ValueError(f"{label} {path}: {error}") from error
-
-
-def _counts(changes: tuple[ReferenceSnapshotChange, ...]) -> dict[str, int]:
-    counts = {kind.value: 0 for kind in ReferenceItemChangeKind}
-    for change in changes:
-        counts[change.kind.value] += 1
-    return counts
-
-
-def _change_values(changes: tuple[ReferenceSnapshotChange, ...]) -> list[dict[str, object]]:
-    return [
-        {
-            "kind": change.kind.value,
-            "source_item_id": change.source_item_id,
-            "previous_content_hash": (
-                change.previous.content_hash if change.previous is not None else None
-            ),
-            "current_content_hash": (
-                change.current.content_hash if change.current is not None else None
-            ),
-        }
-        for change in changes
-    ]
 
 
 def register_commands(parser: argparse.ArgumentParser) -> None:
@@ -214,7 +192,7 @@ def diff(args: argparse.Namespace) -> int:
     except (OSError, ValueError) as error:
         return _report_error(error)
 
-    counts = _counts(changes)
+    counts = count_changes(changes)
     if args.json:
         print(
             json.dumps(
@@ -224,7 +202,7 @@ def diff(args: argparse.Namespace) -> int:
                     "previous": args.previous,
                     "current": args.current,
                     "counts": counts,
-                    "changes": _change_values(changes),
+                    "changes": changes_as_json(changes),
                 },
                 indent=2,
             )
