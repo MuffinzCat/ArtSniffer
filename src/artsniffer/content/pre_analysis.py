@@ -10,16 +10,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from artsniffer.content.rating import ContentRating
-from artsniffer.content.service_permission_evaluation import (
+from artsniffer.content.service_permissions import (
     ServiceContentPermissionDecision,
     ServiceContentPermissionReason,
+    ServiceContentPermissions,
     evaluate_service_content_permissions,
 )
-from artsniffer.content.service_permissions import ServiceContentPermissions
-from artsniffer.profiles.content_policy import ProfileContentPolicy
-from artsniffer.profiles.content_policy_evaluation import (
+from artsniffer.profiles.content_policy import (
     ContentPolicyDecision,
     ContentPolicyReason,
+    ProfileContentPolicy,
     evaluate_content_policy,
 )
 from artsniffer.safety.subject import SafetyClearedSubject
