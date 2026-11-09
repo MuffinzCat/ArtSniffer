@@ -6,7 +6,8 @@ import pytest
 
 import artsniffer.benchmark.runner as benchmark
 from artsniffer.analysis.artwork import ArtworkAnalysis
-from artsniffer.benchmark.models import BenchmarkAnalysis, BenchmarkImage
+from artsniffer.benchmark.analysis import BenchmarkAnalysis
+from artsniffer.benchmark.dataset import BenchmarkImage
 from artsniffer.benchmark.runner import (
     benchmark_analysers,
     benchmark_image,

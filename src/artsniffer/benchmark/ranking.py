@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from artsniffer.analysis.embedding_similarity import cosine_similarity
-from artsniffer.benchmark.models import BenchmarkAnalysis
+from artsniffer.benchmark.analysis import BenchmarkAnalysis
 
 
 @dataclass

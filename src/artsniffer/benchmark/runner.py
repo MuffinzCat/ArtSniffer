@@ -3,7 +3,8 @@
 from time import perf_counter
 
 from artsniffer.analysis.image_analyser import ImageAnalyser
-from artsniffer.benchmark.models import BenchmarkAnalysis, BenchmarkImage
+from artsniffer.benchmark.analysis import BenchmarkAnalysis
+from artsniffer.benchmark.dataset import BenchmarkImage
 
 
 def benchmark_image(analyser: ImageAnalyser, benchmark_image: BenchmarkImage) -> BenchmarkAnalysis:
@@ -27,7 +28,7 @@ def benchmark_images(
     analyser: ImageAnalyser, benchmark_images: tuple[BenchmarkImage, ...]
 ) -> tuple[BenchmarkAnalysis, ...]:
     """Benchmark one analyser on each image in input order."""
-    return tuple(benchmark_image(analyser, img) for img in benchmark_images)
+    return tuple(benchmark_image(analyser, image) for image in benchmark_images)
 
 
 def benchmark_analysers(
@@ -35,5 +36,5 @@ def benchmark_analysers(
 ) -> tuple[BenchmarkAnalysis, ...]:
     """Benchmark every analyser on every image, ordered by analyser then image."""
     return tuple(
-        benchmark_image(analyser, img) for analyser in analysers for img in benchmark_images
+        benchmark_image(analyser, image) for analyser in analysers for image in benchmark_images
     )

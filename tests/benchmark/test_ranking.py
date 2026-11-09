@@ -3,7 +3,7 @@
 import pytest
 
 from artsniffer.analysis.artwork import ArtworkAnalysis
-from artsniffer.benchmark.models import BenchmarkAnalysis
+from artsniffer.benchmark.analysis import BenchmarkAnalysis
 from artsniffer.benchmark.ranking import rank_benchmark_matches
 
 

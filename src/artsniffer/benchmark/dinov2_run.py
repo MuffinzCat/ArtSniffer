@@ -57,7 +57,7 @@ def main(
                 "was not found in the benchmark dataset."
             )
 
-        result = build_benchmark_result(
+        benchmark_result = build_benchmark_result(
             query,
             analyses,
             separation_pair=(
@@ -67,16 +67,16 @@ def main(
         )
 
         result_path = results_directory / f"{comparison.query_artwork_id}.json"
-        result_path.write_text(result.to_json(), encoding="utf-8")
+        result_path.write_text(benchmark_result.to_json(), encoding="utf-8")
 
-        print(f"Model: {result.model_id}")
-        print(f"Query: {result.query_artwork_id}")
+        print(f"Model: {benchmark_result.model_id}")
+        print(f"Query: {benchmark_result.query_artwork_id}")
 
-        for match in result.matches:
+        for match in benchmark_result.matches:
             print(f"{match.artwork_id}: {match.similarity:.4f}")
 
-        if result.separation is not None:
-            print(f"Separation: {result.separation.value:.4f}")
+        if benchmark_result.separation is not None:
+            print(f"Separation: {benchmark_result.separation.value:.4f}")
 
         print(f"Saved: {result_path}")
         print()
