@@ -101,7 +101,7 @@ uv run artsniffer --help
 ```
 
 Readable output is the default: source, supplied root, total observed item count and each item ID
-in provider order. JSON contains `source_id`, `root`, `item_count` and an `items` array of
+in provider order. JSON contains `schema_version: 1`, `source_id`, `root`, `item_count` and an `items` array of
 `source_item_id` / `content_hash` objects in the same order. JSON `root` preserves the exact argument
 text supplied by the caller, not the provider's canonical path. Expected provider/filesystem errors
 are reported on stderr with a non-zero exit status and no partial successful result.
@@ -124,6 +124,72 @@ are rejected, and traversal/read failures or detected file changes abort the who
 than return partial success. Use an operator-controlled, reasonably quiescent directory tree:
 portable checks do not guarantee atomic snapshots or hostile-race-resistant confinement. Filesystem
 reads may update access times or hydrate cloud-backed files.
+
+### Compare against a saved scan
+
+Save a successful JSON scan, then compare the same source against the current directory:
+
+```powershell
+uv run artsniffer references scan-local "C:\References\My Library" --source-id favourites --json |
+    Set-Content -Encoding utf8 "C:\References\baseline.json"
+uv run artsniffer references diff-local "C:\References\My Library" --source-id favourites --against "C:\References\baseline.json"
+uv run artsniffer references diff-local "C:\References\My Library" --source-id favourites --against "C:\References\baseline.json" --json
+```
+
+Check that the scan succeeded before using its output as a baseline. Saving the baseline is an
+explicit shell operation; neither command writes to the reference library or modifies a baseline.
+Keep snapshots outside the scanned library where practical.
+
+Readable diff output includes source, supplied root and baseline path, then category counts.
+For a directory with 18 unchanged items:
+
+```text
+Added: 0
+Changed: 0
+Unchanged: 18
+Removed: 0
+```
+
+Added, changed and removed item IDs are listed indented beneath their categories; unchanged IDs
+are omitted from readable output. Items match by exact `source_item_id`, without case, whitespace
+or Unicode normalisation. Matching hashes mean unchanged; differing hashes mean changed. Identical
+hashes on different IDs are valid and do not match those items: a rename is an addition and removal.
+Current items, including additions, retain provider order; removals are sorted by exact item ID.
+
+The baseline must be a UTF-8 JSON object (a UTF-8 BOM is accepted). Existing unversioned
+`scan-local` snapshots remain supported; new scans include integer `schema_version: 1`.
+Unknown versions, duplicate JSON keys, non-standard NaN/Infinity values, invalid encoding, missing
+or extra fields and incorrect field types are errors. Required fields are:
+
+- `source_id`: a non-blank string exactly matching `--source-id`.
+- `root`: a non-blank historical string; it need not exist or match the current root and is never
+  accessed.
+- `item_count`: a non-negative integer, not a boolean, equal to the number of items.
+- `items`: an array of objects containing only non-blank string `source_item_id` and `content_hash`.
+  Each hash must be `sha256:` followed by 64 lowercase hexadecimal digits. Every item ID must be
+  unique, even when duplicate entries have the same hash. Item IDs are opaque and are never opened
+  as baseline paths.
+
+`--json` produces a stable, two-space-indented object with these fields:
+
+- `schema_version`: `1` for the diff output format.
+- `source_id`, `root`, `against`: the exact arguments supplied by the caller.
+- `counts`: integer `added`, `changed`, `unchanged` and `removed` counts.
+- `changes`: ordered entries for **all** results, including unchanged items, with `kind`,
+  `source_item_id`, `previous_content_hash` and `current_content_hash`. The absent hash is `null`
+  for additions/removals. Current entries come first, then sorted removals.
+
+Baseline validation completes before the provider is constructed. A valid comparison scans exactly
+once and returns exit status **0**, even when differences exist. Expected baseline/provider errors
+return **1**, with useful stderr, no traceback and no partial successful stdout; CLI usage errors
+return **2**. The baseline is not updated automatically. This is a read-only, one-off comparison,
+not persistence, artwork identity allocation, analysis, caching or monitoring; the provider's
+non-atomic scan and filesystem-read caveats above still apply.
+
+The provider-neutral `ReferenceSnapshotChange` and `diff_reference_snapshots` in
+[`artsniffer.references.snapshot_diff`](src/artsniffer/references/snapshot_diff.py) compare previous
+and current observations without creating `ArtworkRecord` identities. The existing
+artwork-record comparison remains separate and unchanged.
 
 This is an observation primitive only. Application configuration, polling, temporary retrieval,
 analysis integration and OneDrive integration remain planned; it does not complete issue #39.
