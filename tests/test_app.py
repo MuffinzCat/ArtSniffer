@@ -72,7 +72,7 @@ def test_main_dispatches_to_selected_handler(
     command: str, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     handler = Mock(return_value=7)
-    monkeypatch.setattr(cli.references, "run", handler)
+    monkeypatch.setattr(cli.references, "run_local_reference_command", handler)
     argv = ["references", command, "library", "--source-id", "local", "--json"]
     if command == "diff-local":
         argv.extend(["--against", "baseline.json"])

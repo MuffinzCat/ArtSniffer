@@ -6,9 +6,9 @@ import sys
 from pathlib import Path
 
 from artsniffer.commands.reference_change_output import (
-    changes_as_json,
-    count_changes,
-    human_change_lines,
+    count_reference_changes,
+    format_reference_change_lines,
+    reference_changes_as_json,
 )
 from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
 from artsniffer.commands.safe_write import safe_write
@@ -18,7 +18,7 @@ from artsniffer.references.observation import ReferenceItemObservation
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
 
 
-def register_command(parser: argparse.ArgumentParser) -> None:
+def register_refresh_local_command(parser: argparse.ArgumentParser) -> None:
     """Register one managed local-reference refresh."""
     parser.add_argument("root", metavar="ROOT", help="Local reference library directory.")
     parser.add_argument("--source-id", required=True, help="Explicit source identity.")
@@ -27,10 +27,12 @@ def register_command(parser: argparse.ArgumentParser) -> None:
         "--dry-run", action="store_true", help="Compare and report without changing state."
     )
     parser.add_argument("--json", action="store_true", help="Print complete JSON results.")
-    parser.set_defaults(handler=run)
+    parser.set_defaults(handler=run_local_refresh_command)
 
 
-def _read_previous(path: Path, source_id: str) -> tuple[ReferenceItemObservation, ...]:
+def load_previous_state_observations(
+    path: Path, source_id: str
+) -> tuple[ReferenceItemObservation, ...]:
     try:
         snapshot = read_snapshot(path)
     except (OSError, ValueError) as error:
@@ -45,7 +47,7 @@ def _report_error(error: OSError | ValueError) -> int:
     return 1
 
 
-def _human_output(
+def format_refresh_summary(
     args: argparse.Namespace,
     changes: tuple[ReferenceSnapshotChange, ...],
     state_written: bool,
@@ -57,11 +59,11 @@ def _human_output(
         f"State: {args.state}",
         f"Status: {status}",
     ]
-    lines.extend(human_change_lines(changes))
+    lines.extend(format_reference_change_lines(changes))
     return "\n".join(lines)
 
 
-def run(args: argparse.Namespace) -> int:
+def run_local_refresh_command(args: argparse.Namespace) -> int:
     """Compare a complete live observation and update state only after validation succeeds."""
     root = Path(args.root)
     state_path = Path(args.state)
@@ -70,7 +72,9 @@ def run(args: argparse.Namespace) -> int:
     try:
         ensure_output_outside_reference_root(root, state_path)
         state_existed = state_path.exists()
-        previous = _read_previous(state_path, args.source_id) if state_existed else ()
+        previous = (
+            load_previous_state_observations(state_path, args.source_id) if state_existed else ()
+        )
 
         provider = LocalFilesystemReferenceProvider(source_id=args.source_id, root=root)
         current = provider.observe()
@@ -94,12 +98,12 @@ def run(args: argparse.Namespace) -> int:
                     "dry_run": args.dry_run,
                     "state_written": state_written,
                     "resulting_item_count": len(current),
-                    "counts": count_changes(changes),
-                    "changes": changes_as_json(changes),
+                    "counts": count_reference_changes(changes),
+                    "changes": reference_changes_as_json(changes),
                 },
                 indent=2,
             )
         )
     else:
-        print(_human_output(args, changes, state_written))
+        print(format_refresh_summary(args, changes, state_written))
     return 0
