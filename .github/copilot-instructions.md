@@ -2,10 +2,10 @@
 
 ## Project context
 
-ArtSniffer is a self-hosted personalised artwork discovery and recommendation service, designed
-around modular reference ingestion, source discovery, artwork analysis, recommendation and ranking,
-persistence, and delivery layers. It aims to remain CPU-friendly and is under active, incremental
-development in Python.
+ArtSniffer is a personal, self-hosted hobby project for personalised artwork discovery and
+recommendation. It is intended to remain understandable to a reasonably capable beginner; optimise
+for code Muffin can understand and increasingly modify with guidance. The project is under active,
+incremental development in Python and aims to remain CPU-friendly.
 
 The current repository provides core domain records and recommendation-scoring primitives; it does
 not yet implement the complete service pipeline or persistence and delivery systems. Treat the
@@ -23,8 +23,13 @@ depend on unimplemented features.
   delivery responsibilities modular.
 - Keep delivery behaviour out of recommendation models and source-specific behaviour out of
   provider-neutral scoring logic. Preserve provenance for externally sourced data.
-- Prefer small composable functions and services. Avoid abstractions for hypothetical needs and
-  avoid redesigning existing models for unrelated features.
+- Prefer straightforward Python, plain names, and direct control flow. Keep structure proportionate
+  to behaviour; avoid speculative architecture, enterprise-style frameworks, and future-proofing
+  without a concrete need.
+- Avoid excessive files, packages, layers, wrappers, forwarding modules, and one-caller abstractions.
+  Keep closely related code together when that reduces navigation, but do not turn a focused module
+  into a miscellaneous collection. Functions, services, and modules are useful when they clarify
+  real responsibilities; making them small or composable is not a goal in itself.
 - Design expensive artwork analysis to be reusable per relevant artwork and model version, rather
   than repeatedly recomputing it across profiles. Do not imply that caching or persistence already
   exists.
@@ -48,15 +53,16 @@ depend on unimplemented features.
   they form part of a model or function's public contract.
 - Follow Ruff's configured 100-character line length. Do not add another formatter, linter, type
   checker, or test framework.
-- Use British English in comments, documentation, and user-facing prose where natural.
+- Write concise comments and docstrings that explain intent rather than restating syntax or names.
+  Use natural British English and avoid formal, repetitive, bureaucratic, or generated-looking prose.
 
 ## Tests and validation
 
-- Add focused tests for new behaviour, including meaningful boundary conditions. Test public
-  behaviour and use real ArtSniffer domain objects where practical.
-- Use `pytest.mark.parametrize` for genuinely repetitive cases when it improves clarity,
-  `pytest.approx` for floating-point comparisons, and exact message assertions for intentional
-  validation behaviour.
+- Add focused tests for meaningful behaviour, relevant boundary conditions, safety, compatibility,
+  and regressions. Test public behaviour and use real ArtSniffer domain objects where practical.
+- Use `pytest.mark.parametrize` for genuinely repetitive cases when it improves clarity and
+  `pytest.approx` for floating-point comparisons. Assert exact wording only when it is an
+  intentional public contract.
 - Do not duplicate validation tests owned by another model or function, or test behaviour the unit
   under test does not own. Include a regression test for bug fixes where practical.
 - After code changes, run applicable checks using the repository's existing commands:
@@ -83,11 +89,12 @@ depend on unimplemented features.
 
 ## Performance and maintainability
 
-- Favour CPU-friendly self-hosted designs. Avoid repeated image analysis or model inference, reuse
-  expensive derived analysis where the architecture permits, and avoid loading unnecessary large
-  datasets into memory.
-- Consider algorithmic cost when comparing candidates across multiple profiles and references.
-  Measure before introducing complex optimisations.
+- Favour CPU-friendly self-hosted designs. Consider repeated work, filesystem I/O, memory growth,
+  database access, and algorithmic cost, including when comparing candidates across multiple
+  profiles and references. Avoid repeated image analysis or model inference; reuse expensive
+  derived analysis where the architecture permits and avoid loading unnecessary large datasets
+  into memory.
+- Measure before introducing complicated performance optimisations.
 - Keep useful comments that explain intent, architecture, algorithms, policy boundaries, or
   non-obvious behaviour. Add comments when they materially help readers; avoid comments that merely
   restate syntax. Do not remove established intent or behaviour comments just to reduce comment

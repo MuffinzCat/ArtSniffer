@@ -11,8 +11,10 @@ applyTo: "src/**/*.py"
   identifiers and the relationships between domain objects.
 - Keep data models focused on representation and invariants, not unrelated service behaviour. Use
   existing dataclasses and domain objects rather than adding wrappers without a concrete need.
-- Prefer small pure functions for deterministic calculations where appropriate. Avoid unnecessary
-  mutation and favour predictable results.
+- Prefer pure functions for deterministic calculations when they make behaviour clearer; avoid
+  splitting cohesive code into helpers solely to make each function small. Use a class when a
+  clear stateful abstraction or domain invariant calls for one. Avoid unnecessary mutation and
+  favour predictable results.
 - When handling floating-point values, embeddings, scores, or weights, explicitly consider
   non-finite values and relevant numeric boundaries.
 - Preserve conventional mathematical meanings in low-level utilities; apply application-specific
