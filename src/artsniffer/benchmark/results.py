@@ -8,7 +8,7 @@ import json
 from dataclasses import asdict, dataclass
 from math import isfinite
 
-from artsniffer.benchmark.models import BenchmarkAnalysis
+from artsniffer.benchmark.analysis import BenchmarkAnalysis
 from artsniffer.benchmark.ranking import BenchmarkMatch, rank_benchmark_matches
 
 

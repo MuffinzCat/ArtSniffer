@@ -282,8 +282,9 @@ integration remain unfinished work under issue #39 and related issues.
 
 ## Local Benchmarks
 
-Provider-neutral benchmark records live in `artsniffer.benchmark.models`, and timing runners live
-in `artsniffer.benchmark.runner`. Production image analysers remain in `artsniffer.analysis`.
+Provider-neutral benchmark manifest records live in `artsniffer.benchmark.dataset`, completed
+timed analyses in `artsniffer.benchmark.analysis`, and timing runners in
+`artsniffer.benchmark.runner`. Production image analysers remain in `artsniffer.analysis`.
 
 Keep local benchmark artwork in `benchmark-data/images/` with its original filenames, and keep
 generated benchmark results within `benchmark-data/` too. Git ignores `benchmark-data/` directories
