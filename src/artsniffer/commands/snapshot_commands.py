@@ -5,7 +5,11 @@ import json
 import sys
 from pathlib import Path
 
-from artsniffer.commands.reference_change_output import changes_as_json, count_changes
+from artsniffer.commands.reference_change_output import (
+    count_reference_changes,
+    format_reference_change_lines,
+    reference_changes_as_json,
+)
 from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
 from artsniffer.commands.safe_write import safe_write
 from artsniffer.commands.snapshot_file import (
@@ -14,17 +18,16 @@ from artsniffer.commands.snapshot_file import (
     read_snapshot,
 )
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
-from artsniffer.references.observation import ReferenceItemChangeKind
 from artsniffer.references.snapshot_diff import diff_reference_snapshots
 
 
-def _format_version(snapshot: ReferenceSnapshotFile) -> str:
+def snapshot_version_label(snapshot: ReferenceSnapshotFile) -> str:
     return "legacy-unversioned" if snapshot.schema_version is None else "version-1"
 
 
-def _metadata(snapshot: ReferenceSnapshotFile) -> dict[str, object]:
+def snapshot_json_metadata(snapshot: ReferenceSnapshotFile) -> dict[str, object]:
     return {
-        "format": _format_version(snapshot),
+        "format": snapshot_version_label(snapshot),
         "schema_version": snapshot.schema_version,
         "source_id": snapshot.source_id,
         "root": snapshot.root,
@@ -37,14 +40,14 @@ def _report_error(error: OSError | ValueError) -> int:
     return 1
 
 
-def _read(path: Path, label: str) -> ReferenceSnapshotFile:
+def read_snapshot_for_command(path: Path, label: str) -> ReferenceSnapshotFile:
     try:
         return read_snapshot(path)
     except (OSError, ValueError) as error:
         raise ValueError(f"{label} {path}: {error}") from error
 
 
-def register_commands(parser: argparse.ArgumentParser) -> None:
+def register_snapshot_commands(parser: argparse.ArgumentParser) -> None:
     """Register snapshot management operations."""
     commands = parser.add_subparsers(dest="snapshot_command", required=True)
 
@@ -60,7 +63,7 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
     create_parser.add_argument(
         "--json", action="store_true", help="Print command-result JSON after saving."
     )
-    create_parser.set_defaults(handler=create)
+    create_parser.set_defaults(handler=create_snapshot_command)
 
     validate_parser = commands.add_parser(
         "validate", help="Validate a snapshot without scanning or changing it."
@@ -68,7 +71,7 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
     validate_parser.add_argument("snapshot", metavar="SNAPSHOT", help="Snapshot file to validate.")
     validate_parser.add_argument("--source-id", help="Require an exact source identity match.")
     validate_parser.add_argument("--json", action="store_true", help="Print JSON metadata.")
-    validate_parser.set_defaults(handler=validate)
+    validate_parser.set_defaults(handler=validate_snapshot_command)
 
     show_parser = commands.add_parser("show", help="Show snapshot metadata; optionally list IDs.")
     show_parser.add_argument("snapshot", metavar="SNAPSHOT", help="Snapshot file to inspect.")
@@ -76,7 +79,7 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
         "--items", action="store_true", help="Include exact item IDs (and hashes in JSON)."
     )
     show_parser.add_argument("--json", action="store_true", help="Print JSON metadata.")
-    show_parser.set_defaults(handler=show)
+    show_parser.set_defaults(handler=show_snapshot_command)
 
     diff_parser = commands.add_parser(
         "diff", help="Compare two saved snapshots without scanning a provider."
@@ -84,10 +87,10 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
     diff_parser.add_argument("previous", metavar="PREVIOUS", help="Previous snapshot file.")
     diff_parser.add_argument("current", metavar="CURRENT", help="Current snapshot file.")
     diff_parser.add_argument("--json", action="store_true", help="Print complete JSON results.")
-    diff_parser.set_defaults(handler=diff)
+    diff_parser.set_defaults(handler=diff_snapshots_command)
 
 
-def create(args: argparse.Namespace) -> int:
+def create_snapshot_command(args: argparse.Namespace) -> int:
     """Scan once and safely create a version-1 snapshot."""
     output = Path(args.output)
     try:
@@ -125,18 +128,18 @@ def create(args: argparse.Namespace) -> int:
     return 0
 
 
-def validate(args: argparse.Namespace) -> int:
+def validate_snapshot_command(args: argparse.Namespace) -> int:
     """Validate a saved snapshot and report its source and version metadata."""
     path = Path(args.snapshot)
     try:
-        snapshot = _read(path, "Snapshot")
+        snapshot = read_snapshot_for_command(path, "Snapshot")
         if args.source_id is not None and snapshot.source_id != args.source_id:
             raise ValueError("Snapshot source_id must match --source-id exactly.")
     except (OSError, ValueError) as error:
         return _report_error(error)
 
     if args.json:
-        print(json.dumps({"valid": True, **_metadata(snapshot)}, indent=2))
+        print(json.dumps({"valid": True, **snapshot_json_metadata(snapshot)}, indent=2))
     else:
         version = "legacy (unversioned)" if snapshot.schema_version is None else "1"
         print(
@@ -149,22 +152,22 @@ def validate(args: argparse.Namespace) -> int:
     return 0
 
 
-def show(args: argparse.Namespace) -> int:
+def show_snapshot_command(args: argparse.Namespace) -> int:
     """Inspect validated snapshot metadata and optionally expose opaque item IDs."""
     path = Path(args.snapshot)
     try:
-        snapshot = _read(path, "Snapshot")
+        snapshot = read_snapshot_for_command(path, "Snapshot")
     except (OSError, ValueError) as error:
         return _report_error(error)
 
-    result = _metadata(snapshot)
+    snapshot_metadata = snapshot_json_metadata(snapshot)
     if args.items:
-        result["items"] = [
+        snapshot_metadata["items"] = [
             {"source_item_id": item.source_item_id, "content_hash": item.content_hash}
             for item in snapshot.items
         ]
     if args.json:
-        print(json.dumps(result, indent=2))
+        print(json.dumps(snapshot_metadata, indent=2))
     else:
         version = "legacy (unversioned)" if snapshot.schema_version is None else "1"
         lines = [
@@ -180,19 +183,19 @@ def show(args: argparse.Namespace) -> int:
     return 0
 
 
-def diff(args: argparse.Namespace) -> int:
+def diff_snapshots_command(args: argparse.Namespace) -> int:
     """Compare two strictly validated snapshots without observing a provider."""
     previous_path, current_path = Path(args.previous), Path(args.current)
     try:
-        previous = _read(previous_path, "Previous snapshot")
-        current = _read(current_path, "Current snapshot")
+        previous = read_snapshot_for_command(previous_path, "Previous snapshot")
+        current = read_snapshot_for_command(current_path, "Current snapshot")
         if previous.source_id != current.source_id:
             raise ValueError("Snapshot source_id values must match exactly.")
         changes = diff_reference_snapshots(previous.source_id, previous.items, current.items)
     except (OSError, ValueError) as error:
         return _report_error(error)
 
-    counts = count_changes(changes)
+    counts = count_reference_changes(changes)
     if args.json:
         print(
             json.dumps(
@@ -202,7 +205,7 @@ def diff(args: argparse.Namespace) -> int:
                     "previous": args.previous,
                     "current": args.current,
                     "counts": counts,
-                    "changes": changes_as_json(changes),
+                    "changes": reference_changes_as_json(changes),
                 },
                 indent=2,
             )
@@ -213,11 +216,6 @@ def diff(args: argparse.Namespace) -> int:
             f"Previous: {args.previous}",
             f"Current: {args.current}",
         ]
-        for kind in ReferenceItemChangeKind:
-            lines.append(f"{kind.value.title()}: {counts[kind.value]}")
-            if kind is not ReferenceItemChangeKind.UNCHANGED:
-                lines.extend(
-                    f"  {change.source_item_id}" for change in changes if change.kind is kind
-                )
+        lines.extend(format_reference_change_lines(changes))
         print("\n".join(lines))
     return 0

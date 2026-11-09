@@ -5,16 +5,20 @@ import json
 import sys
 from pathlib import Path
 
-from artsniffer.commands.reference_change_output import count_changes, human_change_lines
-from artsniffer.commands.refresh_local import register_command as register_refresh_command
-from artsniffer.commands.snapshot_commands import register_commands as register_snapshot_commands
+from artsniffer.commands.reference_change_output import (
+    count_reference_changes,
+    format_reference_change_lines,
+    reference_changes_as_json,
+)
+from artsniffer.commands.refresh_local import register_refresh_local_command
+from artsniffer.commands.snapshot_commands import register_snapshot_commands
 from artsniffer.commands.snapshot_file import read_snapshot
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
 from artsniffer.references.observation import ReferenceItemObservation
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
 
 
-def _load_baseline(path: Path, source_id: str) -> tuple[ReferenceItemObservation, ...]:
+def load_baseline_observations(path: Path, source_id: str) -> tuple[ReferenceItemObservation, ...]:
     try:
         snapshot = read_snapshot(path)
         if snapshot.source_id != source_id:
@@ -24,7 +28,7 @@ def _load_baseline(path: Path, source_id: str) -> tuple[ReferenceItemObservation
         raise ValueError(f"Baseline {path}: {error}") from error
 
 
-def _format_diff(
+def format_local_reference_diff(
     source_id: str,
     root: str,
     against: str,
@@ -38,29 +42,17 @@ def _format_diff(
                 "source_id": source_id,
                 "root": root,
                 "against": against,
-                "counts": count_changes(changes),
-                "changes": [
-                    {
-                        "kind": change.kind.value,
-                        "source_item_id": change.source_item_id,
-                        "previous_content_hash": (
-                            change.previous.content_hash if change.previous is not None else None
-                        ),
-                        "current_content_hash": (
-                            change.current.content_hash if change.current is not None else None
-                        ),
-                    }
-                    for change in changes
-                ],
+                "counts": count_reference_changes(changes),
+                "changes": reference_changes_as_json(changes),
             },
             indent=2,
         )
     lines = [f"Source: {source_id}", f"Root: {root}", f"Against: {against}"]
-    lines.extend(human_change_lines(changes))
+    lines.extend(format_reference_change_lines(changes))
     return "\n".join(lines)
 
 
-def register_commands(parser: argparse.ArgumentParser) -> None:
+def register_reference_commands(parser: argparse.ArgumentParser) -> None:
     """Register one-off local reference commands on the references group."""
     reference_commands = parser.add_subparsers(dest="reference_command", required=True)
     scan = reference_commands.add_parser(
@@ -70,7 +62,7 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
         "diff-local", help="Compare a local library once against a saved scan-local JSON snapshot."
     )
     for command in (scan, diff):
-        command.set_defaults(handler=run)
+        command.set_defaults(handler=run_local_reference_command)
         command.add_argument("root", metavar="ROOT", help="Local reference library directory.")
         command.add_argument(
             "--source-id", required=True, help="Explicit reference source identity."
@@ -88,14 +80,14 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
     refresh = reference_commands.add_parser(
         "refresh-local", help="Compare a local library and safely refresh managed snapshot state."
     )
-    register_refresh_command(refresh)
+    register_refresh_local_command(refresh)
 
 
-def run(args: argparse.Namespace) -> int:
+def run_local_reference_command(args: argparse.Namespace) -> int:
     """Observe or compare a local library, reporting expected command failures."""
     try:
         previous = (
-            _load_baseline(Path(args.against), args.source_id)
+            load_baseline_observations(Path(args.against), args.source_id)
             if args.reference_command == "diff-local"
             else ()
         )
@@ -111,7 +103,9 @@ def run(args: argparse.Namespace) -> int:
         return 1
 
     if changes is not None:
-        print(_format_diff(args.source_id, args.root, args.against, changes, args.json))
+        print(
+            format_local_reference_diff(args.source_id, args.root, args.against, changes, args.json)
+        )
     elif args.json:
         print(
             json.dumps(
