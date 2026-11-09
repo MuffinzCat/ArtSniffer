@@ -6,9 +6,9 @@ The goal is to learn a user's visual preferences from curated reference collecti
 
 ## Status
 
-ArtSniffer is currently in early development.
+ArtSniffer is currently in early domain and infrastructure development.
 
-The initial project foundation is being built before work begins on reference-library integration, artwork analysis, recommendation profiles, source monitoring, and delivery services.
+Core safety, content-policy, analysis, caching, and recommendation primitives exist. Reference-library and source integrations, end-to-end application orchestration, delivery services, and production deployment remain planned.
 
 ## Current Domain Boundaries
 
@@ -38,14 +38,16 @@ source metadata / labels -> unconditional safety -> service-level permissions
 -> recommendation eligibility -> destination eligibility -> delivery
 ```
 
-Only an affirmative bound safety result exposes a `SafetyClearedSubject`. A future composed
-pre-analysis boundary should require that clearance, preserve its artwork/content-version binding,
-and stop on service rejection before evaluating profile policy. The standalone service and profile
-evaluators are pure rating rules, not subject-bound authorisation to process content.
+Only an affirmative bound safety result exposes a `SafetyClearedSubject`. The composed
+pre-analysis boundary requires that clearance, preserves its exact artwork/content-version binding,
+evaluates service permissions before profile policy, and short-circuits on service rejection.
+Approval permits only progression to expensive analysis; it does not grant recommendation or
+destination eligibility.
 
-Gate composition and an analysis execution entry point are not implemented yet, so the intended
-pipeline order is not yet enforced. Service permissions are only the first part of issue #36.
-Full adult compliance, destination opt-in and platform-specific eligibility remain later work.
+Exact cached image-analysis reuse is available through a provider-neutral helper keyed by artwork
+ID, supplied content hash, and analyser model ID. Candidate and reference callers are not yet
+integrated, and broader end-to-end application orchestration remains planned. Full adult
+compliance, destination opt-in, and platform-specific eligibility also remain later work.
 
 ## Planned Recommendation Signals
 
