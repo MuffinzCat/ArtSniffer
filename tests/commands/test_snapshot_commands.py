@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -138,6 +139,8 @@ def test_snapshot_create_never_writes_inside_reference_root(
     output = root / "managed snapshot.json"
     constructor = Mock()
     monkeypatch.setattr(snapshot_commands, "LocalFilesystemReferenceProvider", constructor)
+    safe_writer = Mock()
+    monkeypatch.setattr(snapshot_commands, "safe_write", safe_writer)
 
     result = main(
         snapshot_argv(
@@ -147,8 +150,107 @@ def test_snapshot_create_never_writes_inside_reference_root(
 
     assert result == 1
     constructor.assert_not_called()
+    safe_writer.assert_not_called()
     assert not output.exists()
+    assert list(root.iterdir()) == []
     assert capsys.readouterr().out == ""
+
+
+def test_snapshot_create_rejects_destination_with_parent_inside_reference_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    root = tmp_path / "library with spaces"
+    root.mkdir()
+    output = root / ".."
+    constructor = Mock()
+    safe_writer = Mock()
+    monkeypatch.setattr(snapshot_commands, "LocalFilesystemReferenceProvider", constructor)
+    monkeypatch.setattr(snapshot_commands, "safe_write", safe_writer)
+
+    result = main(
+        snapshot_argv(
+            "create", str(root), "--source-id", "local", "--output", str(output), "--force"
+        )
+    )
+
+    assert result == 1
+    constructor.assert_not_called()
+    safe_writer.assert_not_called()
+    assert list(root.iterdir()) == []
+    assert "must be outside the reference root" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(
+    os.name != "posix",
+    reason="This host is not POSIX and cannot expose byte filenames through filesystem paths.",
+)
+def test_cli_round_trips_non_utf8_posix_filename(tmp_path: Path, capsys) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    raw_filename = b"non-utf8-\xff.png"
+    descriptor = os.open(
+        os.path.join(os.fsencode(root), raw_filename), os.O_CREAT | os.O_WRONLY, 0o600
+    )
+    os.close(descriptor)
+    item_id = os.fsdecode(raw_filename)
+    snapshot = tmp_path / "snapshot.json"
+    state = tmp_path / "state.json"
+
+    assert (
+        main(snapshot_argv("create", str(root), "--source-id", "local", "--output", str(snapshot)))
+        == 0
+    )
+    assert read_snapshot(snapshot).items[0].source_item_id == item_id
+    capsys.readouterr()
+
+    assert main(snapshot_argv("validate", str(snapshot), "--source-id", "local", as_json=True)) == 0
+    assert json.loads(capsys.readouterr().out)["valid"] is True
+
+    assert main(snapshot_argv("show", str(snapshot), "--items", as_json=True)) == 0
+    shown = json.loads(capsys.readouterr().out)
+    assert shown["items"][0]["source_item_id"] == item_id
+
+    assert main(snapshot_argv("diff", str(snapshot), str(snapshot), as_json=True)) == 0
+    diff_result = json.loads(capsys.readouterr().out)
+    assert diff_result["counts"]["added"] == 0
+    assert diff_result["counts"]["unchanged"] == 1
+
+    assert (
+        main(
+            [
+                "references",
+                "refresh-local",
+                str(root),
+                "--source-id",
+                "local",
+                "--state",
+                str(state),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    refresh_result = json.loads(capsys.readouterr().out)
+    assert refresh_result["counts"]["added"] == 1
+    assert read_snapshot(state).items[0].source_item_id == item_id
+
+    assert (
+        main(
+            [
+                "references",
+                "refresh-local",
+                str(root),
+                "--source-id",
+                "local",
+                "--state",
+                str(state),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    refresh_result = json.loads(capsys.readouterr().out)
+    assert refresh_result["counts"]["unchanged"] == 1
 
 
 def test_snapshot_create_force_replaces_existing_target(

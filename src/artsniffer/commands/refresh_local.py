@@ -68,9 +68,9 @@ def run(args: argparse.Namespace) -> int:
     state_existed = False
     state_written = False
     try:
+        ensure_output_outside_reference_root(root, state_path)
         state_existed = state_path.exists()
         previous = _read_previous(state_path, args.source_id) if state_existed else ()
-        ensure_output_outside_reference_root(root, state_path)
 
         provider = LocalFilesystemReferenceProvider(source_id=args.source_id, root=root)
         current = provider.observe()

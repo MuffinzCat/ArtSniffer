@@ -140,4 +140,5 @@ def encode_snapshot(
         "item_count": len(encoded_items),
         "items": encoded_items,
     }
-    return (json.dumps(value, ensure_ascii=False, allow_nan=False, indent=2) + "\n").encode("utf-8")
+    serialized = json.dumps(value, ensure_ascii=False, allow_nan=False, indent=2) + "\n"
+    return serialized.encode("utf-8", errors="backslashreplace")

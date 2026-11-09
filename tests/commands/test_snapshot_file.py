@@ -189,6 +189,21 @@ def test_encode_is_deterministic_utf8_version_1_and_does_not_mutate_input() -> N
     assert tuple(items) == before
 
 
+def test_encode_escapes_surrogates_and_round_trips_exact_item_id(tmp_path: Path) -> None:
+    item_id = "folder/\udcff-é.png"
+    item = ReferenceItemObservation("source", item_id, digest(b"opaque"))
+
+    encoded = encode_snapshot("source", "root", (item,))
+    path = tmp_path / "snapshot.json"
+    path.write_bytes(encoded)
+
+    text = encoded.decode("utf-8")
+    assert r"\udcff" in text
+    assert "é" in text
+    assert json.loads(text)["items"][0]["source_item_id"] == item_id
+    assert read_snapshot(path).items == (item,)
+
+
 def test_encode_sorts_items_and_supports_empty_snapshots() -> None:
     items = (
         ReferenceItemObservation("source", "z", digest(b"z")),

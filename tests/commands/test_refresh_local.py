@@ -309,14 +309,38 @@ def test_refresh_never_writes_state_inside_reference_root(
     root.mkdir()
     state = root / "state.json"
     constructor = Mock()
+    safe_writer = Mock()
     monkeypatch.setattr(refresh_local, "LocalFilesystemReferenceProvider", constructor)
+    monkeypatch.setattr(refresh_local, "safe_write", safe_writer)
 
     result = main(refresh_argv(root, state))
 
     assert result == 1
     constructor.assert_not_called()
+    safe_writer.assert_not_called()
     assert not state.exists()
+    assert list(root.iterdir()) == []
     assert capsys.readouterr().out == ""
+
+
+def test_refresh_rejects_state_with_parent_inside_reference_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    root = tmp_path / "library with spaces"
+    root.mkdir()
+    state = root / ".."
+    constructor = Mock()
+    safe_writer = Mock()
+    monkeypatch.setattr(refresh_local, "LocalFilesystemReferenceProvider", constructor)
+    monkeypatch.setattr(refresh_local, "safe_write", safe_writer)
+
+    result = main(refresh_argv(root, state))
+
+    assert result == 1
+    constructor.assert_not_called()
+    safe_writer.assert_not_called()
+    assert list(root.iterdir()) == []
+    assert "must be outside the reference root" in capsys.readouterr().err
 
 
 def test_refresh_human_output_states_source_paths_status_and_counts(

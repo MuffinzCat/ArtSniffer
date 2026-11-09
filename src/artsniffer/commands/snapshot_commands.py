@@ -91,9 +91,9 @@ def create(args: argparse.Namespace) -> int:
     """Scan once and safely create a version-1 snapshot."""
     output = Path(args.output)
     try:
+        ensure_output_outside_reference_root(Path(args.root), output)
         if not args.force and output.exists():
             raise FileExistsError(f"Snapshot already exists: {output}. Use --force to replace it.")
-        ensure_output_outside_reference_root(Path(args.root), output)
         provider = LocalFilesystemReferenceProvider(source_id=args.source_id, root=Path(args.root))
         items = provider.observe()
         content = encode_snapshot(args.source_id, args.root, items)
