@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from artsniffer.commands.snapshot_commands import register_commands as register_snapshot_commands
 from artsniffer.commands.snapshot_file import read_snapshot
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
 from artsniffer.references.observation import ReferenceItemChangeKind, ReferenceItemObservation
@@ -82,6 +83,11 @@ def register_commands(parser: argparse.ArgumentParser) -> None:
             "--json", action="store_true", help="Print JSON instead of readable text."
         )
     diff.add_argument("--against", required=True, metavar="BASELINE", help="Saved scan-local JSON.")
+
+    snapshot = reference_commands.add_parser(
+        "snapshot", help="Create, validate, inspect, and compare saved local snapshots."
+    )
+    register_snapshot_commands(snapshot)
 
 
 def run(args: argparse.Namespace) -> int:

@@ -600,6 +600,7 @@ def test_reference_commands_have_only_agreed_dependencies() -> None:
         "sys",
         "pathlib",
         "artsniffer.commands.snapshot_file",
+        "artsniffer.commands.snapshot_commands",
         "artsniffer.references.local_filesystem",
         "artsniffer.references.observation",
         "artsniffer.references.snapshot_diff",
