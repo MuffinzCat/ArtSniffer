@@ -4,10 +4,8 @@ from collections import defaultdict
 from collections.abc import Sequence
 
 from artsniffer.analysis.artwork import ArtworkAnalysis
-from artsniffer.profiles.profile import RecommendationProfile
-from artsniffer.profiles.reference import ProfileReferenceLink
-from artsniffer.references.collection import ReferenceCollection
-from artsniffer.references.collection_artwork import CollectionArtworkLink
+from artsniffer.profiles.profile import ProfileReferenceLink, RecommendationProfile
+from artsniffer.references.collection import CollectionArtworkLink, ReferenceCollection
 from artsniffer.references.source import ReferenceSource
 
 # Matches the entry shape accepted by calculate_visual_similarity_score.

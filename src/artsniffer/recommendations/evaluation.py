@@ -3,8 +3,7 @@
 from dataclasses import dataclass
 
 from artsniffer.analysis.artwork import ArtworkAnalysis
-from artsniffer.profiles.profile import RecommendationProfile
-from artsniffer.profiles.reference import ProfileReferenceLink
+from artsniffer.profiles.profile import ProfileReferenceLink, RecommendationProfile
 from artsniffer.recommendations.candidate import RecommendationCandidate
 from artsniffer.recommendations.composition import compose_recommendation_score
 from artsniffer.recommendations.eligibility import (
@@ -13,7 +12,7 @@ from artsniffer.recommendations.eligibility import (
 )
 from artsniffer.recommendations.score import RecommendationScoreComponent
 from artsniffer.recommendations.visual_scoring import calculate_visual_similarity_score
-from artsniffer.references.collection_artwork import CollectionArtworkLink
+from artsniffer.references.collection import CollectionArtworkLink
 
 
 @dataclass
