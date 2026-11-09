@@ -4,8 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from artsniffer.benchmark.dataset import load_benchmark_comparisons, load_benchmark_images
-from artsniffer.benchmark.models import BenchmarkComparison, BenchmarkImage
+from artsniffer.benchmark.dataset import (
+    BenchmarkComparison,
+    BenchmarkImage,
+    load_benchmark_comparisons,
+    load_benchmark_images,
+)
 
 
 def test_load_benchmark_images_with_one_image(tmp_path: Path) -> None:
