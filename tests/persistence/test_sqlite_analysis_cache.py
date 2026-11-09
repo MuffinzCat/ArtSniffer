@@ -1,10 +1,13 @@
 """Tests for the SQLite-backed artwork analysis cache."""
 
 from collections.abc import Iterator
+from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
 from artsniffer.analysis.artwork import ArtworkAnalysis
+from artsniffer.analysis.cached_image import analyse_cached_image
 from artsniffer.persistence.analysis_cache import AnalysisCache
 from artsniffer.persistence.sqlite_analysis_cache import SQLiteAnalysisCache
 
@@ -86,3 +89,40 @@ def test_sqlite_analysis_cache_rejects_empty_content_hash(
 ) -> None:
     with pytest.raises(ValueError, match=r"\AContent hash must not be empty or whitespace\.\Z"):
         sqlite_cache.put(_analysis(), content_hash)
+
+
+def test_cached_image_analysis_reuses_sqlite_result_after_reopening(tmp_path: Path) -> None:
+    database_path = tmp_path / "analysis.sqlite"
+    image_path = tmp_path / "image.png"
+    analyser = Mock(model_id="visual-model-v1")
+    analysis = _analysis()
+    analyser.analyse.return_value = analysis
+    cache = SQLiteAnalysisCache(database_path)
+    try:
+        first = analyse_cached_image(
+            "artwork-001", "sha256:content-v1", image_path, analyser=analyser, cache=cache
+        )
+        second = analyse_cached_image(
+            "artwork-001", "sha256:content-v1", image_path, analyser=analyser, cache=cache
+        )
+        assert first is analysis
+        assert second == analysis
+        analyser.analyse.assert_called_once_with("artwork-001", image_path)
+    finally:
+        cache.close()
+
+    reopened_cache = SQLiteAnalysisCache(database_path)
+    try:
+        assert (
+            analyse_cached_image(
+                "artwork-001",
+                "sha256:content-v1",
+                image_path,
+                analyser=analyser,
+                cache=reopened_cache,
+            )
+            == analysis
+        )
+        analyser.analyse.assert_called_once_with("artwork-001", image_path)
+    finally:
+        reopened_cache.close()
