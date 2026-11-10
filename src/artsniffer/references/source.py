@@ -1,3 +1,5 @@
+"""Provider-neutral configuration records for reference sources."""
+
 from dataclasses import dataclass
 
 

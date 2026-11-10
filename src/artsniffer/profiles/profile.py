@@ -1,3 +1,5 @@
+"""Recommendation profile configuration and profile-to-reference links."""
+
 from dataclasses import dataclass, field
 
 from artsniffer.profiles.content_policy import (

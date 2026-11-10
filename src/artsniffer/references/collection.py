@@ -1,3 +1,5 @@
+"""Reference collection configuration and artwork membership links."""
+
 from dataclasses import dataclass
 
 

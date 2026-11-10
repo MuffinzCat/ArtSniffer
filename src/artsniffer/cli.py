@@ -2,6 +2,7 @@
 
 import argparse
 from collections.abc import Sequence
+from pathlib import Path
 
 from artsniffer.commands import references
 
@@ -13,6 +14,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         description="Observe local reference libraries and manage snapshot files.",
         epilog="Use 'artsniffer references --help' for scan, snapshot, and refresh commands.",
     )
+    parser.add_argument("--config", type=Path, help="Path to the ArtSniffer configuration file")
     commands = parser.add_subparsers(dest="command", required=True)
     references.register_reference_commands(
         commands.add_parser(

@@ -9,9 +9,16 @@ import pytest
 from artsniffer.settings import (
     ArtSnifferSettings,
     LocalReferenceLibrarySettings,
+    find_config_path,
     load_settings,
     parse_local_reference_library,
 )
+
+
+@pytest.fixture
+def clean_config_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    for variable in ("ARTSNIFFER_CONFIG", "LOCALAPPDATA", "XDG_CONFIG_HOME", "HOME"):
+        monkeypatch.delenv(variable, raising=False)
 
 
 def test_empty_configuration_has_no_reference_libraries(tmp_path: Path) -> None:
@@ -206,3 +213,207 @@ def test_settings_records_are_immutable(tmp_path: Path) -> None:
         setattr(library, library_attribute, "other")
     with pytest.raises(FrozenInstanceError):
         setattr(settings, settings_attribute, ())
+
+
+def test_find_config_path_accepts_an_existing_relative_explicit_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    config_path = Path("settings/config.toml")
+    config_path.parent.mkdir()
+    config_path.write_text("", encoding="utf-8")
+
+    assert find_config_path(config_path) == config_path
+
+
+def test_find_config_path_accepts_an_existing_absolute_explicit_path(
+    tmp_path: Path, clean_config_environment: None
+) -> None:
+    config_path = (tmp_path / "config.toml").resolve()
+    config_path.write_text("", encoding="utf-8")
+
+    assert find_config_path(config_path) == config_path
+
+
+@pytest.mark.parametrize("as_directory", [False, True])
+def test_find_config_path_rejects_an_explicit_path_that_is_not_a_file(
+    tmp_path: Path, as_directory: bool, clean_config_environment: None
+) -> None:
+    config_path = tmp_path / "not-a-file"
+    if as_directory:
+        config_path.mkdir()
+
+    with pytest.raises(FileNotFoundError) as error:
+        find_config_path(config_path)
+
+    assert str(config_path) in str(error.value)
+
+
+def test_find_config_path_prefers_explicit_path_over_environment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    explicit_path = tmp_path / "explicit.toml"
+    environment_path = tmp_path / "environment.toml"
+    explicit_path.write_text("", encoding="utf-8")
+    environment_path.write_text("", encoding="utf-8")
+    monkeypatch.setenv("ARTSNIFFER_CONFIG", str(environment_path))
+
+    assert find_config_path(explicit_path) == explicit_path
+
+
+def test_find_config_path_uses_an_existing_absolute_environment_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    config_path = (tmp_path / "environment.toml").resolve()
+    config_path.write_text("", encoding="utf-8")
+    monkeypatch.setenv("ARTSNIFFER_CONFIG", str(config_path))
+
+    assert find_config_path(None) == config_path
+
+
+@pytest.mark.parametrize("value", ["", " \t "])
+def test_find_config_path_treats_empty_environment_override_as_unset(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+    value: str,
+) -> None:
+    home = tmp_path.resolve()
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "linux")
+    monkeypatch.setenv("ARTSNIFFER_CONFIG", value)
+    monkeypatch.setenv("HOME", str(home))
+
+    assert find_config_path(None) == home / ".config" / "artsniffer" / "config.toml"
+
+
+def test_find_config_path_rejects_a_relative_environment_override(
+    monkeypatch: pytest.MonkeyPatch, clean_config_environment: None
+) -> None:
+    monkeypatch.setenv("ARTSNIFFER_CONFIG", "relative/config.toml")
+
+    with pytest.raises(RuntimeError, match="ARTSNIFFER_CONFIG.*absolute path"):
+        find_config_path(None)
+
+
+def test_find_config_path_reports_a_missing_environment_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    config_path = (tmp_path / "missing.toml").resolve()
+    monkeypatch.setenv("ARTSNIFFER_CONFIG", str(config_path))
+
+    with pytest.raises(FileNotFoundError) as error:
+        find_config_path(None)
+
+    assert str(config_path) in str(error.value)
+
+
+def test_find_config_path_uses_the_windows_local_appdata_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    local_appdata = tmp_path.resolve()
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "win32")
+    monkeypatch.setenv("LOCALAPPDATA", str(local_appdata))
+
+    assert find_config_path(None) == local_appdata / "ArtSniffer" / "config.toml"
+
+
+@pytest.mark.parametrize("local_appdata", [None, "", "relative/path"])
+def test_find_config_path_fails_without_absolute_windows_local_appdata(
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+    local_appdata: str | None,
+) -> None:
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "win32")
+    if local_appdata is not None:
+        monkeypatch.setenv("LOCALAPPDATA", local_appdata)
+
+    with pytest.raises(RuntimeError, match="could not determine a default configuration"):
+        find_config_path(None)
+
+
+def test_find_config_path_uses_absolute_linux_xdg_config_home(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    xdg_config_home = tmp_path.resolve()
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "linux")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg_config_home))
+    monkeypatch.setenv("HOME", str(tmp_path / "unused-home"))
+
+    assert find_config_path(None) == xdg_config_home / "artsniffer" / "config.toml"
+
+
+def test_find_config_path_ignores_relative_xdg_config_home(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    home = tmp_path.resolve()
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "linux")
+    monkeypatch.setenv("XDG_CONFIG_HOME", "relative/xdg")
+    monkeypatch.setenv("HOME", str(home))
+
+    assert find_config_path(None) == home / ".config" / "artsniffer" / "config.toml"
+
+
+@pytest.mark.parametrize("xdg_config_home", [None, ""])
+def test_find_config_path_uses_home_when_xdg_config_home_is_empty_or_unset(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+    xdg_config_home: str | None,
+) -> None:
+    home = tmp_path.resolve()
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "linux")
+    monkeypatch.setenv("HOME", str(home))
+    if xdg_config_home is not None:
+        monkeypatch.setenv("XDG_CONFIG_HOME", xdg_config_home)
+
+    assert find_config_path(None) == home / ".config" / "artsniffer" / "config.toml"
+
+
+@pytest.mark.parametrize("home", [None, "", "relative/home"])
+def test_find_config_path_fails_without_absolute_linux_home(
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+    home: str | None,
+) -> None:
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "linux")
+    if home is not None:
+        monkeypatch.setenv("HOME", home)
+
+    with pytest.raises(RuntimeError, match="could not determine a default configuration"):
+        find_config_path(None)
+
+
+def test_find_config_path_rejects_an_unsupported_platform(
+    monkeypatch: pytest.MonkeyPatch, clean_config_environment: None
+) -> None:
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "darwin")
+
+    with pytest.raises(RuntimeError, match="could not determine a default configuration"):
+        find_config_path(None)
+
+
+def test_find_config_path_does_not_discover_config_in_current_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    clean_config_environment: None,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("artsniffer.settings.sys.platform", "linux")
+    Path("config.toml").write_text("", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="could not determine a default configuration"):
+        find_config_path(None)
