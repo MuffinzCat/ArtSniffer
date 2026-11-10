@@ -1,3 +1,5 @@
+"""Run a synthetic recommendation evaluation without external services."""
+
 from artsniffer.analysis.artwork import ArtworkAnalysis
 from artsniffer.profiles.profile import ProfileReferenceLink, RecommendationProfile
 from artsniffer.recommendations.evaluation import evaluate_recommendation

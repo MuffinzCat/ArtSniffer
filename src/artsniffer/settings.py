@@ -1,3 +1,7 @@
+"""Load, validate, and locate ArtSniffer configuration."""
+
+import os
+import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -76,3 +80,45 @@ def load_settings(config_path: Path) -> ArtSnifferSettings:
             parse_local_reference_library(reference_library, config_path.parent)
         )
     return ArtSnifferSettings(reference_libraries=tuple(parsed_reference_libraries))
+
+
+def find_config_path(explicit_config_path: Path | None) -> Path:
+    """Find an explicit or overridden config file, or the supported OS default location."""
+    if explicit_config_path is not None:
+        if explicit_config_path.is_file():
+            return explicit_config_path
+        raise FileNotFoundError(
+            f"Configuration file does not exist or is not a file: {explicit_config_path}"
+        )
+    config_location = os.environ.get("ARTSNIFFER_CONFIG")
+    if config_location is not None and config_location.strip():
+        config_path = Path(config_location)
+        if config_path.is_absolute():
+            if config_path.is_file():
+                return config_path
+            raise FileNotFoundError(
+                f"Configuration file does not exist or is not a file: {config_path}"
+            )
+        raise RuntimeError("ARTSNIFFER_CONFIG environment variable must be an absolute path")
+    if sys.platform == "win32":
+        local_windows_appdata = os.environ.get("LOCALAPPDATA", "").strip()
+        if local_windows_appdata:
+            local_windows_appdata_path = Path(local_windows_appdata)
+            if local_windows_appdata_path.is_absolute():
+                return local_windows_appdata_path / "ArtSniffer" / "config.toml"
+    if sys.platform == "linux":
+        xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "").strip()
+        if xdg_config_home:
+            xdg_config_home_path = Path(xdg_config_home)
+            if xdg_config_home_path.is_absolute():
+                linux_config_path = xdg_config_home_path / "artsniffer" / "config.toml"
+                return linux_config_path
+        linux_home = os.environ.get("HOME", "").strip()
+        if linux_home:
+            linux_home_path = Path(linux_home)
+            if linux_home_path.is_absolute():
+                return linux_home_path / ".config" / "artsniffer" / "config.toml"
+    raise RuntimeError(
+        "ArtSniffer could not determine a default configuration location "
+        "for this operating system/environment."
+    )

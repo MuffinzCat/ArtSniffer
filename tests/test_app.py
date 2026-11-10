@@ -86,14 +86,50 @@ def test_main_dispatches_to_selected_handler(
     assert args.root == "library"
     assert args.source_id == "local"
     assert args.json is True
+    assert args.config is None
     if command == "diff-local":
         assert args.against == "baseline.json"
     captured = capsys.readouterr()
     assert captured.out == captured.err == ""
 
 
+@pytest.mark.parametrize(
+    ("config_arguments", "expected_config"),
+    [
+        ([], None),
+        (["--config", "missing.toml"], Path("missing.toml")),
+    ],
+)
+def test_config_option_is_optional_and_parsed_as_a_path(
+    config_arguments: list[str],
+    expected_config: Path | None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    handler = Mock(return_value=0)
+    monkeypatch.setattr(cli.references, "run_local_reference_command", handler)
+
+    assert (
+        main(
+            [
+                *config_arguments,
+                "references",
+                "scan-local",
+                "library",
+                "--source-id",
+                "local",
+            ]
+        )
+        == 0
+    )
+
+    parsed_config = handler.call_args.args[0].config
+    assert parsed_config == expected_config
+    if expected_config is not None:
+        assert isinstance(parsed_config, Path)
+
+
 def test_cli_has_only_agreed_dependencies() -> None:
-    allowed = {"argparse", "collections.abc", "artsniffer.commands"}
+    allowed = {"argparse", "collections.abc", "pathlib", "artsniffer.commands"}
     for node in ast.walk(ast.parse(Path(cli.__file__).read_text(encoding="utf-8"))):
         if isinstance(node, ast.Import):
             assert all(alias.name in allowed for alias in node.names)
