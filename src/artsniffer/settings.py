@@ -5,6 +5,8 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class LocalReferenceLibrarySettings:
+    """Settings for one local reference library and its managed state file."""
+
     source_id: str
     folder: Path
     state_file: Path
@@ -16,6 +18,8 @@ class LocalReferenceLibrarySettings:
 
 @dataclass(frozen=True)
 class ArtSnifferSettings:
+    """Validated settings loaded for the ArtSniffer application."""
+
     reference_libraries: tuple[LocalReferenceLibrarySettings, ...]
 
     def __post_init__(self) -> None:
@@ -29,6 +33,7 @@ class ArtSnifferSettings:
 def parse_local_reference_library(
     library_data: dict[str, object], config_directory: Path
 ) -> LocalReferenceLibrarySettings:
+    """Validate and parse one local reference-library configuration."""
     source_id = library_data.get("source_id")
     if not isinstance(source_id, str):
         raise ValueError("source ID must be a string")
@@ -57,6 +62,7 @@ def parse_local_reference_library(
 
 
 def load_settings(config_path: Path) -> ArtSnifferSettings:
+    """Load and validate ArtSniffer settings from a TOML file."""
     with config_path.open("rb") as config_file:
         config_data = tomllib.load(config_file)
     reference_libraries = config_data.get("reference_libraries", [])
