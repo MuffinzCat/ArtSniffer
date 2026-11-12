@@ -9,10 +9,133 @@ import pytest
 from artsniffer.settings import (
     ArtSnifferSettings,
     LocalReferenceLibrarySettings,
+    create_initial_config,
     find_config_path,
     load_settings,
     parse_local_reference_library,
 )
+
+
+def test_create_initial_config_creates_file_and_missing_parents(tmp_path: Path) -> None:
+    config_path = tmp_path / "nested" / "settings" / "config.toml"
+
+    assert create_initial_config(config_path) is True
+    assert config_path.read_bytes() == b"reference_libraries = []\n"
+
+
+def test_create_initial_config_preserves_existing_file(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    original = b"# existing configuration\r\nreference_libraries = []\r\n"
+    config_path.write_bytes(original)
+
+    assert create_initial_config(config_path) is False
+    assert config_path.read_bytes() == original
+
+
+def test_create_initial_config_rejects_existing_directory(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.mkdir()
+
+    with pytest.raises(FileExistsError):
+        create_initial_config(config_path)
+
+    assert config_path.is_dir()
+
+
+def test_create_initial_config_preserves_concurrently_created_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "config.toml"
+    original = b"concurrent configuration\r\n"
+    original_mkdir = Path.mkdir
+
+    def create_file_after_mkdir(
+        path: Path, mode: int = 0o777, parents: bool = False, exist_ok: bool = False
+    ) -> None:
+        original_mkdir(path, mode=mode, parents=parents, exist_ok=exist_ok)
+        if path == config_path.parent:
+            config_path.write_bytes(original)
+
+    monkeypatch.setattr(Path, "mkdir", create_file_after_mkdir)
+
+    assert create_initial_config(config_path) is False
+    assert config_path.read_bytes() == original
+
+
+def test_create_initial_config_reports_concurrently_created_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "config.toml"
+    original_mkdir = Path.mkdir
+
+    def create_directory_after_mkdir(
+        path: Path, mode: int = 0o777, parents: bool = False, exist_ok: bool = False
+    ) -> None:
+        original_mkdir(path, mode=mode, parents=parents, exist_ok=exist_ok)
+        if path == config_path.parent:
+            original_mkdir(config_path)
+
+    monkeypatch.setattr(Path, "mkdir", create_directory_after_mkdir)
+
+    with pytest.raises(OSError):
+        create_initial_config(config_path)
+
+    assert config_path.is_dir()
+
+
+def test_create_initial_config_propagates_file_exists_error_for_concurrent_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "config.toml"
+    failure = FileExistsError("configuration path appeared")
+
+    def create_directory_and_fail(*args: object, **kwargs: object) -> None:
+        config_path.mkdir()
+        raise failure
+
+    monkeypatch.setattr(Path, "open", create_directory_and_fail)
+
+    with pytest.raises(FileExistsError) as error:
+        create_initial_config(config_path)
+
+    assert error.value is failure
+    assert config_path.is_dir()
+
+
+def test_create_initial_config_propagates_directory_creation_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "missing" / "config.toml"
+    failure = PermissionError("cannot create directory")
+
+    def fail_mkdir(*args: object, **kwargs: object) -> None:
+        raise failure
+
+    monkeypatch.setattr(Path, "mkdir", fail_mkdir)
+
+    with pytest.raises(PermissionError) as error:
+        create_initial_config(config_path)
+
+    assert error.value is failure
+    assert not config_path.exists()
+
+
+def test_create_initial_config_propagates_file_creation_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "config.toml"
+    failure = PermissionError("cannot create file")
+
+    def fail_open(*args: object, **kwargs: object) -> None:
+        raise failure
+
+    monkeypatch.setattr(Path, "open", fail_open)
+
+    with pytest.raises(PermissionError) as error:
+        create_initial_config(config_path)
+
+    assert error.value is failure
+    assert not config_path.exists()
 
 
 @pytest.fixture

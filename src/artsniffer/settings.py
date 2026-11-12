@@ -122,3 +122,24 @@ def find_config_path(explicit_config_path: Path | None) -> Path:
         "ArtSniffer could not determine a default configuration location "
         "for this operating system/environment."
     )
+
+
+def create_initial_config(config_path: Path) -> bool:
+    """Create the initial configuration if it does not already exist.
+
+    Returns:
+        bool: True if the configuration file was created, False if it already existed.
+    """
+    if config_path.exists():
+        if config_path.is_file():
+            return False
+        raise FileExistsError(f"Configuration path exists but is not a file: {config_path}")
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with config_path.open("x", encoding="utf-8", newline="\n") as file:
+            file.write("reference_libraries = []\n")
+            return True
+    except FileExistsError:
+        if config_path.is_file():
+            return False
+        raise
