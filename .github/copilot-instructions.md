@@ -106,3 +106,5 @@ depend on unimplemented features.
   unless explicitly requested.
 - Do not commit, push, force-push, rebase, merge, create pull requests, or modify branch protection
   unless explicitly requested. Do not use destructive Git recovery commands without permission.
+- Treat GitHub Copilot and other AI tools as development tools, not Git authors or co-authors. Do not
+  set an AI tool as a commit author or add AI `Co-authored-by:` trailers.
