@@ -1,4 +1,4 @@
-name: Request Copilot review for manual-review pull requests
+name: Request Copilot review for copilot-review pull requests
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - labeled
 
 concurrency:
-  group: copilot-review-manual-pr-${{ github.event.pull_request.number }}
+  group: copilot-review-requested-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 permissions: {}
@@ -14,7 +14,7 @@ permissions: {}
 jobs:
   request-copilot-review:
     if: >-
-      github.event.label.name == 'manual-review' &&
+      github.event.label.name == 'copilot-review' &&
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.repo.full_name == 'MuffinzCat/ArtSniffer'
     runs-on: ubuntu-latest
