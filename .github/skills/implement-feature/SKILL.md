@@ -17,7 +17,14 @@ Use the supplied details as the task boundary:
 
 Inspect the affected architecture, related tests, and applicable instructions first. Implement only
 the described feature, test its behaviour, run applicable repository validation, review scope, and
-report changes and checks actually run. Do not commit or push.
+report changes and checks actually run.
+
+If the feature comes from a broad roadmap issue, treat the explicitly requested slice and acceptance
+criteria as the implementation boundary; do not implement every future behaviour mentioned by the issue.
+
+Follow the repository's standing Git permissions. For bounded, non-destructive work, stage, commit,
+push and open a pull request after successful validation when that is part of the requested workflow.
+Never merge or exceed the repository's standing permissions.
 
 ## Agent routing compatibility
 
