@@ -30,9 +30,10 @@ depend on unimplemented features.
   Keep closely related code together when that reduces navigation, but do not turn a focused module
   into a miscellaneous collection. Functions, services, and modules are useful when they clarify
   real responsibilities; making them small or composable is not a goal in itself.
-- Design expensive artwork analysis to be reusable per relevant artwork and model version, rather
-  than repeatedly recomputing it across profiles. Do not imply that caching or persistence already
-  exists.
+- Design expensive artwork analysis to reuse the existing cache foundations where they fit. Reuse
+  requires exact artwork/content identity and analyser/model identity/version. Do not imply that
+  cache integration or broader persistence exists where it has not yet been implemented.
+
 
 ## Scope and dependencies
 
@@ -42,6 +43,23 @@ depend on unimplemented features.
 - Prefer the standard library when sufficient. Do not install packages merely to complete a task.
   Add or change dependencies only when explicitly requested or clearly justified, and report the
   reason. Use the existing `uv` workflow.
+
+## GitHub issue writing
+
+When creating, rewriting or updating GitHub issues, keep ordinary issue bodies aggressively short,
+plain and informal while remaining unambiguous. Treat issues as working notes for the user,
+contributors and coding agents, not mini design documents.
+
+Use only sections that genuinely help. A normal issue usually needs a short status when relevant,
+`What I want`, optionally `First/Next useful slice`, and `Done when`. Do not mechanically add
+requirements, dependencies, non-goals, architecture, relationships or acceptance-criteria sections.
+
+Avoid repeating requirements in different sections. Keep completed implementation history in commits,
+pull requests and dated project checkpoints rather than accumulating it in issue bodies.
+
+Longer issues are appropriate when research, licensing, safety, security, provenance or compatibility
+evidence is itself decision-relevant. Prefer linking detailed evidence from a dedicated document and
+keeping the issue focused on current conclusions and the next useful decision or implementation slice.
 
 ## Python and style
 
@@ -65,10 +83,12 @@ depend on unimplemented features.
   intentional public contract.
 - Do not duplicate validation tests owned by another model or function, or test behaviour the unit
   under test does not own. Include a regression test for bug fixes where practical.
-- After code changes, run applicable checks using the repository's existing commands:
-  `uv run ruff format --check .`, `uv run ruff check .`, `uv run pyright`, and `uv run pytest`.
-  Also run `git diff --check`. Do not install substitute tools if expected development tools are
-  unavailable.
+- After substantial Python changes, run the applicable repository checks:
+  `uv run --no-sync ruff format`, `uv run --no-sync ruff format --check .`,
+  `uv run --no-sync ruff check .`, `uv run --no-sync pyright`, focused pytest tests,
+  the full pytest suite where appropriate, `uv run --no-sync python -m compileall -q src tests`,
+  and `git diff --check`. Match validation to the change; documentation-only changes may use a
+  smaller relevant set. Do not install substitute tools if expected development tools are unavailable.
 - Before reporting completion, inspect `git status --short --untracked-files=all`, identify
   unexpected files or changes, and state which checks actually ran. Never claim an unrun check
   passed. For documentation-only changes, use scope-appropriate validation.
@@ -102,9 +122,14 @@ depend on unimplemented features.
 
 ## Git behaviour
 
-- Inspect Git status before and after work, respect the current branch, and do not switch branches
-  unless explicitly requested.
-- Do not commit, push, force-push, rebase, merge, create pull requests, or modify branch protection
-  unless explicitly requested. Do not use destructive Git recovery commands without permission.
+- Inspect Git status before and after work and preserve unrelated local changes. Respect the current
+  branch unless the requested implementation-through-publication workflow requires creating or
+  switching to a dedicated feature branch.
+- For bounded, non-destructive ArtSniffer work whose requested scope includes implementation through
+  publication, you may stage intended files, create logical commits, push the feature branch and open
+  a pull request after successful validation without asking for repeated permission.
+- Do not merge pull requests, remove `manual-review`, add `copilot-review`, force-push, rewrite
+  published history, perform destructive Git actions, install dependencies, modify repository or
+  GitHub settings, expand scope, or touch unrelated local changes without explicit approval.
 - Treat GitHub Copilot and other AI tools as development tools, not Git authors or co-authors. Do not
   set an AI tool as a commit author or add AI `Co-authored-by:` trailers.
