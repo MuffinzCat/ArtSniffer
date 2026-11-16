@@ -1,15 +1,14 @@
-# ArtSniffer Copyright and Usage Notice
+# ArtSniffer Copyright and Licensing Notice
 
-Copyright © 2026 Muffin. All rights reserved.
+Copyright © 2026 ArtSniffer contributors.
 
-ArtSniffer is publicly viewable source code, but it is not open-source software and is not distributed under an open-source licence.
+ArtSniffer is free software: you can redistribute it and/or modify it under the terms of the
+GNU Affero General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. See [`LICENSE`](LICENSE) for the full
+licence text.
 
-No licence or permission is granted to use, copy, reproduce, modify, adapt, distribute, publish, sublicense, sell, create derivative works from, or otherwise exploit this software or its source code, in whole or in part, except where such permission is required by applicable law or provided by the applicable hosting platform's terms.
+SPDX-License-Identifier: AGPL-3.0-or-later
 
-The availability of this source code in a public GitHub repository does not constitute permission to use, modify, redistribute, or create derivative works from ArtSniffer.
-
-Rights granted directly by GitHub's Terms of Service, including rights necessary to view and fork public repositories through GitHub, are not restricted by this notice.
-
-Permission for uses not otherwise permitted may be granted separately by the copyright holder.
-
-All third-party libraries, dependencies, services, APIs, models, assets, and other third-party materials remain subject to their respective licences, terms, and rights holders.
+Third-party libraries, dependencies, services, APIs, models, model weights, datasets, artwork, and
+other third-party materials remain subject to their respective licences, terms, and rights holders;
+they are not covered by ArtSniffer's code licence.

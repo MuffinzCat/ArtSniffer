@@ -296,16 +296,20 @@ dependency group. Run its tests with `uv run --group benchmark-dinov2 pytest` (o
 for the other development checks). Tests mock model loading and image access; they do not download
 weights or read benchmark artwork. Constructing the real analyser may download uncached model files.
 
-## Copyright and Usage
+## Licence
 
-Copyright © 2026 Muffin. All rights reserved.
+ArtSniffer's code is licensed under the GNU Affero General Public License, version 3 or (at your
+option) any later version (SPDX: `AGPL-3.0-or-later`). See [`LICENSE`](LICENSE) for the full text
+and [`NOTICE.md`](NOTICE.md) for the short copyright and licensing notice.
 
-This repository is **source-available but not open source**.
+The AGPL permits commercial use, including selling copies, hosting ArtSniffer, and offering paid
+services around it, provided the licence's conditions are met. Official ArtSniffer releases are
+intended as a free-of-charge community and hobby project; that is project policy, not a licence
+restriction.
 
-No licence is granted to use, copy, modify, distribute, sublicense, or create derivative works from the source code in this repository except where permission is required by applicable law or provided by the applicable hosting platform's terms.
+If you run a modified version of ArtSniffer as a network service, the AGPL's source-availability
+requirements apply: users interacting with it over a network must be offered access to the
+corresponding source of your modified version.
 
-Viewing or forking this repository through GitHub does not grant a licence to use, modify, or redistribute the software outside the rights provided by GitHub's applicable terms.
-
-If you would like permission to use any part of ArtSniffer, please contact the repository owner through GitHub.
-
-See [`NOTICE.md`](NOTICE.md) for the full copyright and usage notice.
+Models, model weights, datasets, artwork, and other third-party materials may be subject to their
+own separate licences and terms. They are not automatically covered by ArtSniffer's code licence.
