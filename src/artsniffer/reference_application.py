@@ -1,7 +1,11 @@
 """Application-level orchestration for configured reference libraries."""
 
+from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
+from artsniffer.commands.safe_write import safe_write
+from artsniffer.commands.snapshot_file import encode_snapshot, read_snapshot
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
 from artsniffer.references.observation import ReferenceItemObservation
+from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
 from artsniffer.settings import ArtSnifferSettings
 
 
@@ -14,4 +18,35 @@ def inspect_sources(
         provider = LocalFilesystemReferenceProvider(folder.source_id, folder.folder)
         observations = provider.observe()
         results.append((provider.source_id, observations))
+    return tuple(results)
+
+
+def synchronise_sources(
+    settings: ArtSnifferSettings,
+) -> tuple[tuple[str, tuple[ReferenceSnapshotChange, ...]], ...]:
+    """Synchronise libraries in order, publishing each state before processing the next.
+
+    A later failure does not roll back states already published.
+    """
+    results = []
+    for library in settings.reference_libraries:
+        for reference_library in settings.reference_libraries:
+            ensure_output_outside_reference_root(reference_library.folder, library.state_file)
+        state_existed = library.state_file.exists()
+        if state_existed:
+            previous_snapshot = read_snapshot(library.state_file)
+            if previous_snapshot.source_id != library.source_id:
+                raise ValueError("Snapshot source ID does not match library source ID.")
+        else:
+            previous_snapshot = None
+        previous = previous_snapshot.items if previous_snapshot is not None else ()
+        provider = LocalFilesystemReferenceProvider(library.source_id, library.folder)
+        current = provider.observe()
+        changes = diff_reference_snapshots(library.source_id, previous, current)
+        safe_write(
+            library.state_file,
+            encode_snapshot(library.source_id, str(library.folder), current),
+            overwrite=state_existed,
+        )
+        results.append((library.source_id, changes))
     return tuple(results)
