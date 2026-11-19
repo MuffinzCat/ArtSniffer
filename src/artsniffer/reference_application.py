@@ -1,10 +1,18 @@
 """Application-level orchestration for configured reference libraries."""
 
+from collections.abc import Callable, Sequence
+
 from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
 from artsniffer.commands.safe_write import safe_write
 from artsniffer.commands.snapshot_file import encode_snapshot, read_snapshot
+from artsniffer.persistence.reference_artwork import ReferenceArtworkStore
+from artsniffer.references.artwork import ArtworkRecord
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
-from artsniffer.references.observation import ReferenceItemObservation
+from artsniffer.references.observation import (
+    ReferenceItemChangeKind,
+    ReferenceItemObservation,
+    diff_reference_observations,
+)
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange, diff_reference_snapshots
 from artsniffer.settings import ArtSnifferSettings
 
@@ -50,3 +58,65 @@ def synchronise_sources(
         )
         results.append((library.source_id, changes))
     return tuple(results)
+
+
+def reconcile_reference_artwork(
+    source_id: str,
+    known_artworks: Sequence[ArtworkRecord],
+    observations: Sequence[ReferenceItemObservation],
+    allocate_artwork_id: Callable[[], str],
+) -> tuple[ArtworkRecord, ...]:
+    """Reconcile reference artwork based on known artworks and observations."""
+    result = []
+    changes = diff_reference_observations(source_id, known_artworks, observations)
+    for change in changes:
+        if change.kind is ReferenceItemChangeKind.ADDED:
+            if change.observation is None:
+                raise ValueError("An added change requires an observation.")
+            artwork_id = allocate_artwork_id()
+            result.append(
+                ArtworkRecord(
+                    artwork_id,
+                    change.source_id,
+                    change.source_item_id,
+                    change.observation.content_hash,
+                )
+            )
+        if change.kind is ReferenceItemChangeKind.CHANGED:
+            if change.observation is None:
+                raise ValueError("A changed change requires an observation.")
+            if change.known_artwork is None:
+                raise ValueError("A changed change requires a known artwork.")
+            result.append(
+                ArtworkRecord(
+                    change.known_artwork.id,
+                    change.source_id,
+                    change.source_item_id,
+                    change.observation.content_hash,
+                )
+            )
+        if change.kind is ReferenceItemChangeKind.UNCHANGED:
+            if change.known_artwork is None:
+                raise ValueError("An unchanged change requires a known artwork.")
+            result.append(change.known_artwork)
+        if change.kind is ReferenceItemChangeKind.REMOVED:
+            continue
+    return tuple(result)
+
+
+def reconcile_persistent_reference_artwork(
+    store: ReferenceArtworkStore,
+    source_id: str,
+    observations: Sequence[ReferenceItemObservation],
+    allocate_artwork_id: Callable[[], str],
+) -> tuple[ArtworkRecord, ...]:
+    """Reconcile current observations and persist the resulting artwork state."""
+    known_artworks = store.get_for_source(source_id)
+    reconciled = reconcile_reference_artwork(
+        source_id,
+        known_artworks,
+        observations,
+        allocate_artwork_id,
+    )
+    store.replace_for_source(source_id, reconciled)
+    return reconciled
