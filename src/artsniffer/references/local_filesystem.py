@@ -113,3 +113,11 @@ class LocalFilesystemReferenceProvider:
                         )
         self._validate_root()
         return tuple(sorted(observations, key=lambda observation: observation.source_item_id))
+
+    def image_path(self, source_item_id: str) -> Path:
+        """Return the checked live path for one local reference image."""
+        path = self._root / source_item_id
+        metadata = self._checked_stat(path)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"Reference path must be a regular file: {path}.")
+        return path

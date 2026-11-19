@@ -3,6 +3,7 @@
 import ast
 import hashlib
 import os
+import stat
 import subprocess
 from pathlib import Path
 from typing import BinaryIO
@@ -247,6 +248,173 @@ def make_symlink(link: Path, target: Path, directory: bool = False) -> None:
         link.symlink_to(target, target_is_directory=directory)
     except (OSError, NotImplementedError) as error:
         pytest.skip(f"Symlink creation unavailable: {error}")
+
+
+@pytest.mark.parametrize("name", ["image.png", "nested/image.png"])
+def test_image_path_returns_live_file_without_changing_snapshot(tmp_path: Path, name: str) -> None:
+    path = tmp_path.joinpath(*name.split("/"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"synthetic image")
+    provider = LocalFilesystemReferenceProvider("local", tmp_path)
+    before = provider.observe()
+    before_stat = path.stat()
+    before_entries = sorted(entry.relative_to(tmp_path).as_posix() for entry in tmp_path.rglob("*"))
+
+    result = provider.image_path(before[0].source_item_id)
+
+    assert result == path.resolve()
+    assert result.read_bytes() == b"synthetic image"
+    after_stat = path.stat()
+    assert (after_stat.st_dev, after_stat.st_ino, after_stat.st_size, after_stat.st_mtime_ns) == (
+        before_stat.st_dev,
+        before_stat.st_ino,
+        before_stat.st_size,
+        before_stat.st_mtime_ns,
+    )
+    assert sorted(entry.relative_to(tmp_path).as_posix() for entry in tmp_path.rglob("*")) == (
+        before_entries
+    )
+    assert provider.observe() == before
+    path.write_bytes(b"updated image")
+    assert result.read_bytes() == b"updated image"
+
+
+def test_image_path_rejects_missing_item(tmp_path: Path) -> None:
+    path = tmp_path / "image.png"
+    path.write_bytes(b"synthetic image")
+    provider = LocalFilesystemReferenceProvider("local", tmp_path)
+    item_id = provider.observe()[0].source_item_id
+    path.unlink()
+
+    with pytest.raises(FileNotFoundError):
+        provider.image_path(item_id)
+
+
+def test_image_path_rejects_directory(tmp_path: Path) -> None:
+    (tmp_path / "folder.png").mkdir()
+    provider = LocalFilesystemReferenceProvider("local", tmp_path)
+    with pytest.raises(ValueError, match="must be a regular file"):
+        provider.image_path("folder.png")
+
+
+@pytest.mark.parametrize("absolute", [False, True])
+def test_image_path_rejects_escape_from_root(tmp_path: Path, absolute: bool) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    outside = tmp_path / "library-other" / "image.png"
+    outside.parent.mkdir()
+    outside.write_bytes(b"outside")
+    provider = LocalFilesystemReferenceProvider("local", root)
+    item_id = str(outside) if absolute else "../library-other/image.png"
+
+    with pytest.raises(ValueError, match="outside the configured root"):
+        provider.image_path(item_id)
+
+
+@pytest.mark.parametrize("kind", ["file", "broken", "internal-directory", "outside-directory"])
+def test_image_path_rejects_symlinks(tmp_path: Path, kind: str) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    if kind in {"file", "broken"}:
+        target = tmp_path / "target.png"
+        if kind == "file":
+            target.write_bytes(b"outside")
+        make_symlink(root / "link.png", target)
+        item_id = "link.png"
+    else:
+        target = root / "target" if kind == "internal-directory" else tmp_path / "target"
+        target.mkdir()
+        (target / "image.png").write_bytes(b"synthetic image")
+        make_symlink(root / "link", target, directory=True)
+        item_id = "link/image.png"
+
+    provider = LocalFilesystemReferenceProvider("local", root)
+    with pytest.raises(ValueError):
+        provider.image_path(item_id)
+
+
+def test_image_path_rejects_root_replaced_by_symlink(tmp_path: Path) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    (root / "image.png").write_bytes(b"synthetic image")
+    provider = LocalFilesystemReferenceProvider("local", root)
+    moved = tmp_path / "moved"
+    root.rename(moved)
+    make_symlink(root, moved, directory=True)
+
+    with pytest.raises(ValueError):
+        provider.image_path("image.png")
+
+
+def test_image_path_rejects_symlink_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "image.png"
+    path.write_bytes(b"abc")
+    provider = LocalFilesystemReferenceProvider("local", tmp_path)
+    metadata = path.lstat()
+    link_metadata = os.stat_result((stat.S_IFLNK, *metadata[1:]))
+    original_lstat = Path.lstat
+    monkeypatch.setattr(
+        Path, "lstat", lambda self: link_metadata if self == path else original_lstat(self)
+    )
+
+    with pytest.raises(ValueError, match="must not be a symlink or junction"):
+        provider.image_path("image.png")
+
+
+def test_image_path_rejects_junction(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = tmp_path / "image.png"
+    path.write_bytes(b"abc")
+    provider = LocalFilesystemReferenceProvider("local", tmp_path)
+    monkeypatch.setattr(Path, "is_junction", lambda self: self == path)
+
+    with pytest.raises(ValueError, match="must not be a symlink or junction"):
+        provider.image_path("image.png")
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows junction creation requires Windows.")
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("internal", [False, True])
+def test_image_path_rejects_windows_junction(tmp_path: Path, nested: bool, internal: bool) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    target = (root if internal else tmp_path) / "target"
+    target.mkdir()
+    (target / "image.png").write_bytes(b"synthetic image")
+    link = root / "junction"
+    provider = LocalFilesystemReferenceProvider("local", root)
+    result = subprocess.run(
+        [os.environ["COMSPEC"], "/c", "mklink", "/J", str(link), str(target)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        pytest.skip(f"Junction creation unavailable: {result.stderr.strip()}")
+    try:
+        assert link.is_junction()
+        with pytest.raises(ValueError):
+            provider.image_path("junction/image.png" if nested else "junction")
+    finally:
+        link.rmdir()
+
+
+def test_image_path_propagates_stat_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "image.png"
+    path.write_bytes(b"abc")
+    provider = LocalFilesystemReferenceProvider("local", tmp_path)
+    error = PermissionError("stat failed")
+
+    def fail_stat(self: Path) -> os.stat_result:
+        raise error
+
+    monkeypatch.setattr(Path, "lstat", fail_stat)
+    with pytest.raises(PermissionError) as raised:
+        provider.image_path("image.png")
+    assert raised.value is error
 
 
 @pytest.mark.parametrize("kind", ["file", "internal-file", "directory", "broken", "cycle"])
