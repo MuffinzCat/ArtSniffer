@@ -10,9 +10,19 @@ import pytest
 from artsniffer import reference_application
 from artsniffer.commands import safe_write as writer
 from artsniffer.commands.snapshot_file import encode_snapshot, read_snapshot
+from artsniffer.references.artwork import ArtworkRecord
 from artsniffer.references.observation import ReferenceItemChangeKind, ReferenceItemObservation
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange
 from artsniffer.settings import ArtSnifferSettings, LocalReferenceLibrarySettings
+
+
+def artwork(
+    artwork_id: str,
+    source_id: str,
+    item_id: str,
+    content_hash: str = "sha256:known",
+) -> ArtworkRecord:
+    return ArtworkRecord(artwork_id, source_id, item_id, content_hash)
 
 
 def test_inspect_sources_with_no_libraries_does_not_construct_providers(
@@ -446,3 +456,193 @@ def test_synchronise_later_failure_does_not_roll_back_earlier_publication(tmp_pa
     assert read_snapshot(first.state_file).items == (observation("first", "item.png", b"first"),)
     assert second.state_file.read_bytes() == invalid_second
     assert not third.state_file.exists()
+
+
+def test_reconcile_reference_artwork_handles_all_four_states() -> None:
+    known = (
+        artwork("art-unchanged", "source-a", "unchanged", "sha256:same"),
+        artwork("art-changed", "source-a", "changed", "sha256:before"),
+        artwork("art-removed", "source-a", "removed", "sha256:removed"),
+    )
+    observations = (
+        ReferenceItemObservation("source-a", "unchanged", "sha256:same"),
+        ReferenceItemObservation("source-a", "changed", "sha256:after"),
+        ReferenceItemObservation("source-a", "added", "sha256:new"),
+    )
+    allocated: list[str] = []
+
+    def allocate_artwork_id() -> str:
+        allocated.append("art-added")
+        return "art-added"
+
+    result = reference_application.reconcile_reference_artwork(
+        "source-a",
+        known,
+        observations,
+        allocate_artwork_id,
+    )
+
+    assert result == (
+        known[0],
+        artwork("art-changed", "source-a", "changed", "sha256:after"),
+        artwork("art-added", "source-a", "added", "sha256:new"),
+    )
+    assert allocated == ["art-added"]
+    assert result[0] is known[0]
+    assert all(record.source_item_id != "removed" for record in result)
+
+
+def test_reconcile_reference_artwork_preserves_ids_for_changed_and_unchanged() -> None:
+    known = (
+        artwork("stable-added", "source-a", "unchanged", "sha256:same"),
+        artwork("stable-changed", "source-a", "changed", "sha256:before"),
+    )
+
+    unchanged = reference_application.reconcile_reference_artwork(
+        "source-a",
+        known,
+        (
+            ReferenceItemObservation("source-a", "unchanged", "sha256:same"),
+            ReferenceItemObservation("source-a", "changed", "sha256:after"),
+        ),
+        lambda: pytest.fail("Stable items must not allocate IDs"),
+    )
+
+    assert unchanged[0] is known[0]
+    assert unchanged[1].id == "stable-changed"
+    assert unchanged[1].content_hash == "sha256:after"
+
+    twice = reference_application.reconcile_reference_artwork(
+        "source-a",
+        unchanged,
+        (
+            ReferenceItemObservation("source-a", "unchanged", "sha256:same"),
+            ReferenceItemObservation("source-a", "changed", "sha256:after"),
+        ),
+        lambda: pytest.fail("Unchanged reconciled items must not allocate IDs"),
+    )
+    assert tuple(record.id for record in twice) == ("stable-added", "stable-changed")
+
+
+def test_reconcile_allocates_only_for_genuinely_added_items() -> None:
+    known = (
+        artwork("art-same", "source-a", "same", "sha256:same"),
+        artwork("art-changed", "source-a", "changed", "sha256:before"),
+    )
+    allocated: list[str] = []
+
+    def allocate() -> str:
+        allocated.append(f"art-new-{len(allocated) + 1}")
+        return f"art-new-{len(allocated)}"
+
+    result = reference_application.reconcile_reference_artwork(
+        "source-a",
+        known,
+        (
+            ReferenceItemObservation("source-a", "same", "sha256:same"),
+            ReferenceItemObservation("source-a", "changed", "sha256:after"),
+            ReferenceItemObservation("source-a", "new-one", "sha256:new-one"),
+            ReferenceItemObservation("source-a", "new-two", "sha256:new-two"),
+        ),
+        allocate,
+    )
+
+    assert allocated == ["art-new-1", "art-new-2"]
+    assert tuple(record.id for record in result) == (
+        "art-same",
+        "art-changed",
+        "art-new-1",
+        "art-new-2",
+    )
+
+
+def test_reconcile_removes_missing_items_and_keeps_source_scope() -> None:
+    known = (
+        artwork("art-local-kept", "source-a", "kept"),
+        artwork("art-local-removed", "source-a", "removed"),
+        artwork("art-other", "source-b", "kept"),
+    )
+
+    result = reference_application.reconcile_reference_artwork(
+        "source-a",
+        known,
+        (
+            ReferenceItemObservation("source-a", "kept", "sha256:known"),
+            ReferenceItemObservation("source-b", "foreign", "sha256:foreign"),
+        ),
+        lambda: pytest.fail("Foreign observations must not allocate IDs"),
+    )
+
+    assert result == (known[0],)
+    assert all(record.source_id == "source-a" for record in result)
+
+
+class RecordingReferenceArtworkStore:
+    def __init__(self, known: tuple[ArtworkRecord, ...]) -> None:
+        self.known = known
+        self.calls: list[object] = []
+
+    def get_for_source(self, source_id: str) -> tuple[ArtworkRecord, ...]:
+        self.calls.append(("get", source_id))
+        return self.known
+
+    def replace_for_source(
+        self,
+        source_id: str,
+        artworks: object,
+    ) -> None:
+        self.calls.append(("replace", source_id, artworks))
+
+
+def test_reconcile_persistent_loads_reconciles_replaces_and_returns_result() -> None:
+    known = (
+        artwork("art-same", "source-a", "same", "sha256:same"),
+        artwork("art-changed", "source-a", "changed", "sha256:before"),
+        artwork("art-removed", "source-a", "removed", "sha256:removed"),
+    )
+    store = RecordingReferenceArtworkStore(known)
+    observations = (
+        ReferenceItemObservation("source-a", "same", "sha256:same"),
+        ReferenceItemObservation("source-a", "changed", "sha256:after"),
+        ReferenceItemObservation("source-a", "added", "sha256:new"),
+    )
+    allocated: list[str] = []
+
+    def allocate() -> str:
+        allocated.append("art-added")
+        return "art-added"
+
+    result = reference_application.reconcile_persistent_reference_artwork(
+        store,
+        "source-a",
+        observations,
+        allocate,
+    )
+
+    assert result == (
+        known[0],
+        artwork("art-changed", "source-a", "changed", "sha256:after"),
+        artwork("art-added", "source-a", "added", "sha256:new"),
+    )
+    assert allocated == ["art-added"]
+    assert store.calls == [
+        ("get", "source-a"),
+        ("replace", "source-a", result),
+    ]
+
+
+def test_reconcile_persistent_empty_result_removes_source_state() -> None:
+    store = RecordingReferenceArtworkStore((artwork("art-old", "source-a", "old"),))
+
+    result = reference_application.reconcile_persistent_reference_artwork(
+        store,
+        "source-a",
+        (),
+        lambda: pytest.fail("No observation should be added"),
+    )
+
+    assert result == ()
+    assert store.calls == [
+        ("get", "source-a"),
+        ("replace", "source-a", ()),
+    ]
