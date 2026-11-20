@@ -1,5 +1,7 @@
 """Tests for the SQLite-backed artwork analysis cache."""
 
+import re
+import sqlite3
 from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import Mock
@@ -89,6 +91,53 @@ def test_sqlite_analysis_cache_rejects_empty_content_hash(
 ) -> None:
     with pytest.raises(ValueError, match=r"\AContent hash must not be empty or whitespace\.\Z"):
         sqlite_cache.put(_analysis(), content_hash)
+
+
+def test_sqlite_analysis_cache_rejects_non_analysis_put(sqlite_cache: AnalysisCache) -> None:
+    with pytest.raises(ValueError, match=r"\AAnalysis must be an ArtworkAnalysis\.\Z"):
+        sqlite_cache.put(object(), "sha256:content-v1")  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("column", "stored_value", "message"),
+    [
+        ("embedding_json", "{", "Stored analysis embedding must be a JSON number array."),
+        (
+            "embedding_json",
+            '{"value": 1}',
+            "Stored analysis embedding must be a JSON number array.",
+        ),
+        ("embedding_json", "[true]", "Stored analysis embedding must be a JSON number array."),
+        ("embedding_json", "[NaN]", "Embedding values must be finite."),
+        ("tags_json", "{", "Stored analysis tags must be a JSON string array."),
+        ("tags_json", '{"value": "tag"}', "Stored analysis tags must be a JSON string array."),
+        ("tags_json", "[1]", "Stored analysis tags must be a JSON string array."),
+        ("tags_json", '[" "]', "Tag must not be empty or whitespace."),
+    ],
+)
+def test_sqlite_analysis_cache_rejects_invalid_stored_data(
+    tmp_path: Path,
+    column: str,
+    stored_value: str,
+    message: str,
+) -> None:
+    database_path = tmp_path / "analysis.sqlite"
+    cache = SQLiteAnalysisCache(database_path)
+    cache.put(_analysis(), "sha256:content-v1")
+    cache.close()
+
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            f"UPDATE artwork_analysis_cache SET {column} = ? WHERE artwork_id = 'artwork-001'",
+            (stored_value,),
+        )
+
+    reopened_cache = SQLiteAnalysisCache(database_path)
+    try:
+        with pytest.raises(ValueError, match=rf"\A{re.escape(message)}\Z"):
+            reopened_cache.get("artwork-001", "sha256:content-v1", "visual-model-v1")
+    finally:
+        reopened_cache.close()
 
 
 def test_cached_image_analysis_reuses_sqlite_result_after_reopening(tmp_path: Path) -> None:

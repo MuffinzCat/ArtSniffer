@@ -47,8 +47,14 @@ class SQLiteAnalysisCache:
         if row is None:
             return None
 
-        embedding_values = json.loads(row[0])
-        tags = json.loads(row[1])
+        try:
+            embedding_values = json.loads(row[0])
+        except json.JSONDecodeError as error:
+            raise ValueError("Stored analysis embedding must be a JSON number array.") from error
+        try:
+            tags = json.loads(row[1])
+        except json.JSONDecodeError as error:
+            raise ValueError("Stored analysis tags must be a JSON string array.") from error
         if not isinstance(embedding_values, list) or any(
             isinstance(value, bool) or not isinstance(value, (int, float))
             for value in embedding_values
@@ -66,6 +72,8 @@ class SQLiteAnalysisCache:
 
     def put(self, analysis: ArtworkAnalysis, content_hash: str) -> None:
         """Insert or replace a cached result without storing source artwork bytes."""
+        if not isinstance(analysis, ArtworkAnalysis):
+            raise ValueError("Analysis must be an ArtworkAnalysis.")
         if not isinstance(content_hash, str) or not content_hash.strip():
             raise ValueError("Content hash must not be empty or whitespace.")
 
