@@ -158,6 +158,31 @@ def test_discovered_artwork_preserves_all_fields() -> None:
     assert artwork.content_hash == "sha256:abc123"
 
 
+def test_discovered_artwork_defaults_content_hash_to_none() -> None:
+    """An artwork discovered before hashing should default to no content hash."""
+
+    artwork = DiscoveredArtwork(
+        id="discovered-artwork-001",
+        post_id="post-001",
+        source_item_id="provider-media-42",
+    )
+
+    assert artwork.content_hash is None
+
+
+def test_discovered_artwork_accepts_explicit_none_content_hash() -> None:
+    """An explicit unknown content hash should remain None."""
+
+    artwork = DiscoveredArtwork(
+        id="discovered-artwork-001",
+        post_id="post-001",
+        source_item_id="provider-media-42",
+        content_hash=None,
+    )
+
+    assert artwork.content_hash is None
+
+
 @pytest.mark.parametrize("invalid_id", ["", " ", "   "])
 def test_discovered_artwork_rejects_empty_or_whitespace_id(invalid_id: str) -> None:
     """Discovered artwork IDs must contain a non-whitespace character."""
