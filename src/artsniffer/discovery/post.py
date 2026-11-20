@@ -60,3 +60,67 @@ class DiscoveredArtwork:
             raise ValueError("Source item ID must not be empty or whitespace.")
         if self.content_hash is not None and not self.content_hash.strip():
             raise ValueError("Content hash must not be empty or whitespace.")
+
+
+@dataclass(frozen=True)
+class DiscoveredPostProvenance:
+    """Preserve the provider's exact observed version of a discovered post."""
+
+    post_id: str
+    source_version_id: str
+
+    def __post_init__(self) -> None:
+        """Validate the identifiers for discovered post provenance."""
+        if not self.post_id.strip():
+            raise ValueError("Post ID must not be empty or whitespace.")
+        if not self.source_version_id.strip():
+            raise ValueError("Source version ID must not be empty or whitespace.")
+
+
+@dataclass(frozen=True)
+class DiscoveredArtworkSourceMetadata:
+    """Preserve provider metadata for one discovered artwork item."""
+
+    artwork_id: str
+    source_media_id: str
+    alt_text: str
+
+    def __post_init__(self) -> None:
+        """Validate the identifiers for discovered artwork source metadata."""
+        if not self.artwork_id.strip():
+            raise ValueError("Artwork ID must not be empty or whitespace.")
+        if not self.source_media_id.strip():
+            raise ValueError("Source media ID must not be empty or whitespace.")
+
+
+@dataclass(frozen=True)
+class DiscoveredSourceLabel:
+    """Preserve provider moderation labels as source evidence, without safety interpretation."""
+
+    src: str
+    uri: str
+    cid: str | None
+    val: str
+    ver: int | None
+    neg: bool | None
+    cts: str
+    exp: str | None
+    sig: str | None
+    hydrated: bool
+
+    def __post_init__(self) -> None:
+        """Validate the required fields for provider-supplied label provenance."""
+        if not self.src.strip():
+            raise ValueError("Label source must not be empty or whitespace.")
+        if not self.uri.strip():
+            raise ValueError("Label URI must not be empty or whitespace.")
+        if self.cid is not None and not self.cid.strip():
+            raise ValueError("Label CID must not be empty or whitespace.")
+        if not self.val.strip():
+            raise ValueError("Label value must not be empty or whitespace.")
+        if not self.cts.strip():
+            raise ValueError("Label timestamp must not be empty or whitespace.")
+        if self.exp is not None and not self.exp.strip():
+            raise ValueError("Label expiry must not be empty or whitespace.")
+        if self.sig is not None and not self.sig.strip():
+            raise ValueError("Label signature must not be empty or whitespace.")

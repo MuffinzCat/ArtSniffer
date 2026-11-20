@@ -2,7 +2,13 @@
 
 import pytest
 
-from artsniffer.discovery.post import DiscoveredArtwork, DiscoveredPost
+from artsniffer.discovery.post import (
+    DiscoveredArtwork,
+    DiscoveredArtworkSourceMetadata,
+    DiscoveredPost,
+    DiscoveredPostProvenance,
+    DiscoveredSourceLabel,
+)
 
 
 def test_discovered_post_preserves_required_fields_and_tags() -> None:
@@ -247,3 +253,95 @@ def test_discovered_artwork_rejects_empty_or_whitespace_content_hash(
         )
 
     assert str(error.value) == "Content hash must not be empty or whitespace."
+
+
+def test_discovered_post_provenance_preserves_source_version() -> None:
+    provenance = DiscoveredPostProvenance(
+        post_id="post-001",
+        source_version_id="bafy-post-cid",
+    )
+
+    assert provenance.post_id == "post-001"
+    assert provenance.source_version_id == "bafy-post-cid"
+
+
+@pytest.mark.parametrize("invalid_post_id", ["", " ", "   "])
+def test_discovered_post_provenance_rejects_empty_post_id(invalid_post_id: str) -> None:
+    with pytest.raises(ValueError, match=r"\APost ID must not be empty or whitespace\.\Z"):
+        DiscoveredPostProvenance(
+            post_id=invalid_post_id,
+            source_version_id="bafy-post-cid",
+        )
+
+
+@pytest.mark.parametrize("invalid_version", ["", " ", "   "])
+def test_discovered_post_provenance_rejects_empty_source_version(
+    invalid_version: str,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"\ASource version ID must not be empty or whitespace\.\Z",
+    ):
+        DiscoveredPostProvenance(
+            post_id="post-001",
+            source_version_id=invalid_version,
+        )
+
+
+def test_discovered_artwork_source_metadata_accepts_empty_alt_text() -> None:
+    metadata = DiscoveredArtworkSourceMetadata(
+        artwork_id="artwork-001",
+        source_media_id="bafy-image-cid",
+        alt_text="",
+    )
+
+    assert metadata.artwork_id == "artwork-001"
+    assert metadata.source_media_id == "bafy-image-cid"
+    assert metadata.alt_text == ""
+
+
+@pytest.mark.parametrize("invalid_artwork_id", ["", " ", "   "])
+def test_discovered_artwork_source_metadata_rejects_empty_artwork_id(
+    invalid_artwork_id: str,
+) -> None:
+    with pytest.raises(ValueError, match=r"\AArtwork ID must not be empty or whitespace\.\Z"):
+        DiscoveredArtworkSourceMetadata(
+            artwork_id=invalid_artwork_id,
+            source_media_id="bafy-image-cid",
+            alt_text="A caption",
+        )
+
+
+@pytest.mark.parametrize("invalid_media_id", ["", " ", "   "])
+def test_discovered_artwork_source_metadata_rejects_empty_media_id(
+    invalid_media_id: str,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"\ASource media ID must not be empty or whitespace\.\Z",
+    ):
+        DiscoveredArtworkSourceMetadata(
+            artwork_id="artwork-001",
+            source_media_id=invalid_media_id,
+            alt_text="A caption",
+        )
+
+
+def test_discovered_source_label_preserves_hydrated_evidence() -> None:
+    label = DiscoveredSourceLabel(
+        src="did:plc:labeler",
+        uri="at://did:plc:author/app.bsky.feed.post/rkey",
+        cid="bafy-post-cid",
+        val="art",
+        ver=1,
+        neg=False,
+        cts="2026-11-20T12:00:00Z",
+        exp="2027-11-20T12:00:00Z",
+        sig="signature",
+        hydrated=True,
+    )
+
+    assert label.src == "did:plc:labeler"
+    assert label.cid == "bafy-post-cid"
+    assert label.val == "art"
+    assert label.hydrated is True
