@@ -105,7 +105,6 @@ class DiscoveredSourceLabel:
     neg: bool | None
     cts: str
     exp: str | None
-    sig: str | None
     hydrated: bool
 
     def __post_init__(self) -> None:
@@ -122,5 +121,3 @@ class DiscoveredSourceLabel:
             raise ValueError("Label timestamp must not be empty or whitespace.")
         if self.exp is not None and not self.exp.strip():
             raise ValueError("Label expiry must not be empty or whitespace.")
-        if self.sig is not None and not self.sig.strip():
-            raise ValueError("Label signature must not be empty or whitespace.")

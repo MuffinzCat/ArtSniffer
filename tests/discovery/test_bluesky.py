@@ -9,8 +9,9 @@ from urllib.request import Request
 import pytest
 
 from artsniffer.discovery.bluesky import (
+    BlueskyDiscoveredPost,
     BlueskyDiscoveryError,
-    BlueskyUnsupportedPost,
+    BlueskyUnmappedPost,
     UnsupportedBlueskyEmbedError,
     bluesky_discovered_post_from_json,
     bluesky_post_url,
@@ -24,13 +25,25 @@ def image_post(*, alt: str = "A landscape", cid: str = "bafy-image") -> dict[str
         "uri": "at://did:plc:author/app.bsky.feed.post/rkey",
         "cid": "bafy-post",
         "author": {"did": "did:plc:author"},
-        "record": {"text": "Synthetic post"},
+        "record": {
+            "text": "Synthetic post",
+            "embed": {
+                "$type": "app.bsky.embed.images",
+                "images": [
+                    {
+                        "alt": alt,
+                        "image": {"ref": {"$link": cid}},
+                    }
+                ],
+            },
+        },
         "embed": {
-            "$type": "app.bsky.embed.images",
+            "$type": "app.bsky.embed.images#view",
             "images": [
                 {
                     "alt": alt,
-                    "image": {"ref": {"$link": cid}},
+                    "thumb": "https://cdn.bsky.app/img/feed_thumbnail/plain/did/image",
+                    "fullsize": "https://cdn.bsky.app/img/feed_fullsize/plain/did/image",
                 }
             ],
         },
@@ -83,7 +96,9 @@ def test_single_image_preserves_identity_and_empty_alt_text() -> None:
 
 def test_multi_image_allocates_one_post_and_distinct_media_ids() -> None:
     post = image_post()
-    embed = post["embed"]
+    record = post["record"]
+    assert isinstance(record, dict)
+    embed = record["embed"]
     assert isinstance(embed, dict)
     embed["images"] = [
         {"alt": "First", "image": {"ref": {"$link": "bafy-one"}}},
@@ -106,13 +121,25 @@ def test_multi_image_allocates_one_post_and_distinct_media_ids() -> None:
 
 def test_gallery_shape_maps_direct_images() -> None:
     post = image_post()
-    post["embed"] = {
+    record = post["record"]
+    assert isinstance(record, dict)
+    record["embed"] = {
         "$type": "app.bsky.embed.gallery",
         "items": [
             {
                 "$type": "app.bsky.embed.gallery#item",
                 "alt": "Gallery alt",
                 "image": {"ref": {"$link": "bafy-gallery"}},
+            }
+        ],
+    }
+    post["embed"] = {
+        "$type": "app.bsky.embed.gallery#view",
+        "items": [
+            {
+                "alt": "Gallery alt",
+                "thumb": "https://cdn.bsky.app/gallery-thumbnail",
+                "fullsize": "https://cdn.bsky.app/gallery-fullsize",
             }
         ],
     }
@@ -126,12 +153,28 @@ def test_gallery_shape_maps_direct_images() -> None:
 
 def test_record_with_media_maps_only_direct_media() -> None:
     post = image_post()
-    post["embed"] = {
+    record = post["record"]
+    assert isinstance(record, dict)
+    record["embed"] = {
         "$type": "app.bsky.embed.recordWithMedia",
         "record": {"$ref": "quoted-post"},
         "media": {
             "$type": "app.bsky.embed.images",
             "images": [{"alt": "Direct", "image": {"ref": {"$link": "bafy-direct"}}}],
+        },
+    }
+    post["embed"] = {
+        "$type": "app.bsky.embed.recordWithMedia#view",
+        "record": {"record": {"uri": "at://did:plc:quoted/app.bsky.feed.post/rkey"}},
+        "media": {
+            "$type": "app.bsky.embed.images#view",
+            "images": [
+                {
+                    "alt": "Direct",
+                    "thumb": "https://cdn.bsky.app/direct-thumbnail",
+                    "fullsize": "https://cdn.bsky.app/direct-fullsize",
+                }
+            ],
         },
     }
 
@@ -152,7 +195,9 @@ def test_record_with_media_maps_only_direct_media() -> None:
 )
 def test_unsupported_embeds_are_explicit(embed: dict[str, object]) -> None:
     post = image_post()
-    post["embed"] = embed
+    record = post["record"]
+    assert isinstance(record, dict)
+    record["embed"] = embed
 
     with pytest.raises(UnsupportedBlueskyEmbedError):
         map_post(post)
@@ -170,7 +215,7 @@ def test_hydrated_labels_are_preserved_as_evidence() -> None:
             "neg": False,
             "cts": "2026-11-20T12:00:00Z",
             "exp": "2027-11-20T12:00:00Z",
-            "sig": "signature",
+            "sig": {"unknown": "representation"},
         }
     ]
 
@@ -214,7 +259,7 @@ def test_malformed_hydrated_labels_are_provider_boundary_errors(
         ("cid", 42, "Bluesky post CID must be a string"),
         ("author", "author", "Bluesky author must be a dictionary"),
         ("record", "record", "Bluesky record must be a dictionary"),
-        ("embed", "embed", "Bluesky embed must be a dictionary"),
+        ("embed", "embed", "Bluesky raw record embed must be a dictionary"),
     ],
 )
 def test_malformed_post_fields_are_provider_boundary_errors(
@@ -235,7 +280,7 @@ def test_malformed_post_fields_are_provider_boundary_errors(
     ("path", "value", "message"),
     [
         ("author.did", 42, "Bluesky author DID must be a string"),
-        ("embed.$type", 42, "Bluesky embed type must be a string"),
+        ("embed.$type", 42, "Bluesky raw record embed type must be a string"),
         ("embed.images", "images", "Bluesky images must be a list"),
         ("embed.image_item", "item", "Each Bluesky image must be a dictionary"),
         ("embed.alt", 42, "Bluesky image alt text must be a string"),
@@ -253,40 +298,54 @@ def test_malformed_nested_fields_are_provider_boundary_errors(
     if path == "author.did":
         post["author"] = {"did": value}
     elif path == "embed.$type":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         embed["$type"] = value
     elif path == "embed.images":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         embed["images"] = value
     elif path == "embed.image_item":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         embed["images"] = [value]
     elif path == "embed.alt":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         images = embed["images"]
         assert isinstance(images, list)
         assert isinstance(images[0], dict)
         images[0]["alt"] = value
     elif path == "embed.blob":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         images = embed["images"]
         assert isinstance(images, list)
         assert isinstance(images[0], dict)
         images[0]["image"] = value
     elif path == "embed.ref":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         images = embed["images"]
         assert isinstance(images, list)
         assert isinstance(images[0], dict)
         images[0]["image"] = {"ref": value}
     elif path == "embed.cid":
-        embed = post["embed"]
+        record = post["record"]
+        assert isinstance(record, dict)
+        embed = record["embed"]
         assert isinstance(embed, dict)
         images = embed["images"]
         assert isinstance(images, list)
@@ -301,11 +360,15 @@ class FakeResponse:
     def __init__(self, payload: object, status: int = 200) -> None:
         self.payload = payload
         self.status = status
+        self.closed = False
 
     def read(self) -> bytes:
         import json
 
         return json.dumps(self.payload).encode("utf-8")
+
+    def close(self) -> None:
+        self.closed = True
 
 
 def test_fetch_feed_constructs_query_and_maps_one_page() -> None:
@@ -316,14 +379,23 @@ def test_fetch_feed_constructs_query_and_maps_one_page() -> None:
         timeout_seconds=3,
     )
     seen_request: Request | None = None
+    seen_response: FakeResponse | None = None
 
     def opener(request: Request, *, timeout: float) -> FakeResponse:
         nonlocal seen_request
+        nonlocal seen_response
         seen_request = request
         assert timeout == 3
-        return FakeResponse({"feed": [{"post": image_post()}], "cursor": "next page"})
+        seen_response = FakeResponse({"feed": [{"post": image_post()}], "cursor": "next page"})
+        return seen_response
 
-    page = fetch_bluesky_feed(settings, cursor="page 1", opener=opener)
+    page = fetch_bluesky_feed(
+        settings,
+        cursor="page 1",
+        opener=opener,
+        allocate_post_id=allocate("post"),
+        allocate_artwork_id=allocate("artwork"),
+    )
 
     assert seen_request is not None
     assert "app.bsky.feed.getFeed" in seen_request.full_url
@@ -334,11 +406,15 @@ def test_fetch_feed_constructs_query_and_maps_one_page() -> None:
     assert "Authorization" not in seen_request.headers
     assert len(page.entries) == 1
     assert page.cursor == "next page"
+    assert seen_response is not None
+    assert seen_response.closed is True
 
 
 def test_fetch_feed_mixed_supported_and_unsupported_entries() -> None:
     unsupported = image_post()
-    unsupported["embed"] = {"$type": "app.bsky.embed.external"}
+    record = unsupported["record"]
+    assert isinstance(record, dict)
+    record["embed"] = {"$type": "app.bsky.embed.external"}
     settings = BlueskyDiscoverySettings(
         source_id="bluesky",
         feed_uri="at://did:plc:feed/app.bsky.feed.generator/discover",
@@ -349,11 +425,81 @@ def test_fetch_feed_mixed_supported_and_unsupported_entries() -> None:
         opener=lambda _request, **_kwargs: FakeResponse(
             {"feed": [{"post": image_post()}, {"post": unsupported}, {"post": None}]}
         ),
+        allocate_post_id=allocate("post"),
+        allocate_artwork_id=allocate("artwork"),
     )
 
     assert len(page.entries) == 3
-    assert isinstance(page.entries[1], BlueskyUnsupportedPost)
-    assert isinstance(page.entries[2], BlueskyUnsupportedPost)
+    assert isinstance(page.entries[1], BlueskyUnmappedPost)
+    assert isinstance(page.entries[2], BlueskyUnmappedPost)
+
+
+def test_same_post_mapping_is_independent_of_feed_position() -> None:
+    post = image_post()
+    first = map_post(post)
+
+    post_id_calls = 0
+    artwork_id_calls = 0
+
+    def post_allocator() -> str:
+        nonlocal post_id_calls
+        post_id_calls += 1
+        return "stable-post-id"
+
+    def artwork_allocator() -> str:
+        nonlocal artwork_id_calls
+        artwork_id_calls += 1
+        return "stable-artwork-id"
+
+    settings = BlueskyDiscoverySettings(
+        source_id="bluesky",
+        feed_uri="at://did:plc:feed/app.bsky.feed.generator/discover",
+    )
+    page = fetch_bluesky_feed(
+        settings,
+        opener=lambda _request, **_kwargs: FakeResponse(
+            {"feed": [{"reason": "ignored"}, {"post": post}]}
+        ),
+        allocate_post_id=post_allocator,
+        allocate_artwork_id=artwork_allocator,
+    )
+
+    mapped = page.entries[1]
+    assert isinstance(mapped, BlueskyDiscoveredPost)
+    assert mapped.post.source_post_id == first.post.source_post_id
+    assert mapped.artwork_metadata[0].source_media_id == "bafy-image"
+    assert post_id_calls == 1
+    assert artwork_id_calls == 1
+
+
+def test_shared_allocators_do_not_reset_or_collide_across_pages() -> None:
+    settings = BlueskyDiscoverySettings(
+        source_id="bluesky",
+        feed_uri="at://did:plc:feed/app.bsky.feed.generator/discover",
+    )
+    post_ids = allocate("post")
+    artwork_ids = allocate("artwork")
+
+    first = fetch_bluesky_feed(
+        settings,
+        opener=lambda _request, **_kwargs: FakeResponse({"feed": [{"post": image_post()}]}),
+        allocate_post_id=post_ids,
+        allocate_artwork_id=artwork_ids,
+    )
+    second = fetch_bluesky_feed(
+        settings,
+        cursor="next",
+        opener=lambda _request, **_kwargs: FakeResponse({"feed": [{"post": image_post()}]}),
+        allocate_post_id=post_ids,
+        allocate_artwork_id=artwork_ids,
+    )
+
+    first_post = first.entries[0]
+    second_post = second.entries[0]
+    assert isinstance(first_post, BlueskyDiscoveredPost)
+    assert isinstance(second_post, BlueskyDiscoveredPost)
+    assert first_post.post.id != second_post.post.id
+    assert first_post.artworks[0].id != second_post.artworks[0].id
 
 
 @pytest.mark.parametrize(
@@ -378,6 +524,8 @@ def test_fetch_feed_rejects_malformed_top_level_payload(
         fetch_bluesky_feed(
             settings,
             opener=lambda _request, **_kwargs: FakeResponse(payload),
+            allocate_post_id=allocate("post"),
+            allocate_artwork_id=allocate("artwork"),
         )
 
 
@@ -400,7 +548,12 @@ def test_fetch_feed_reports_http_error_without_retry() -> None:
         BlueskyDiscoveryError,
         match="Bluesky getFeed returned HTTP 403",
     ):
-        fetch_bluesky_feed(settings, opener=fail)
+        fetch_bluesky_feed(
+            settings,
+            opener=fail,
+            allocate_post_id=allocate("post"),
+            allocate_artwork_id=allocate("artwork"),
+        )
 
 
 def test_fetch_feed_rejects_non_json_response() -> None:
@@ -422,4 +575,6 @@ def test_fetch_feed_rejects_non_json_response() -> None:
         fetch_bluesky_feed(
             settings,
             opener=lambda _request, **_kwargs: HtmlResponse(),
+            allocate_post_id=allocate("post"),
+            allocate_artwork_id=allocate("artwork"),
         )

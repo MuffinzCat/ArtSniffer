@@ -337,7 +337,6 @@ def test_discovered_source_label_preserves_hydrated_evidence() -> None:
         neg=False,
         cts="2026-11-20T12:00:00Z",
         exp="2027-11-20T12:00:00Z",
-        sig="signature",
         hydrated=True,
     )
 

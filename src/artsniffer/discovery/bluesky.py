@@ -25,8 +25,8 @@ class UnsupportedBlueskyEmbedError(BlueskyDiscoveryError):
 
 
 @dataclass(frozen=True)
-class BlueskyUnsupportedPost:
-    """Describe one post that the bounded adapter intentionally could not map."""
+class BlueskyUnmappedPost:
+    """Describe a malformed or unsupported feed post that the adapter could not map."""
 
     post_uri: str | None
     reason: str
@@ -43,7 +43,7 @@ class BlueskyDiscoveredPost:
     labels: tuple[DiscoveredSourceLabel, ...] = ()
 
 
-BlueskyFeedEntry = BlueskyDiscoveredPost | BlueskyUnsupportedPost
+BlueskyFeedEntry = BlueskyDiscoveredPost | BlueskyUnmappedPost
 
 
 @dataclass(frozen=True)
@@ -105,18 +105,17 @@ def bluesky_discovered_post_from_json(
     record = post_data.get("record")
     if not isinstance(record, dict):
         raise BlueskyDiscoveryError("Bluesky record must be a dictionary.")
-
-    embed = post_data.get("embed")
-    if embed is None:
-        embed = record.get("embed")
-    if not isinstance(embed, dict):
-        raise BlueskyDiscoveryError("Bluesky embed must be a dictionary.")
-    embed_type = embed.get("$type")
+    raw_embed = record.get("embed")
+    if raw_embed is None:
+        raise UnsupportedBlueskyEmbedError("Bluesky record has no direct media embed.")
+    if not isinstance(raw_embed, dict):
+        raise BlueskyDiscoveryError("Bluesky raw record embed must be a dictionary.")
+    embed_type = raw_embed.get("$type")
     if not isinstance(embed_type, str):
-        raise BlueskyDiscoveryError("Bluesky embed type must be a string.")
+        raise BlueskyDiscoveryError("Bluesky raw record embed type must be a string.")
 
     if embed_type == "app.bsky.embed.recordWithMedia":
-        media = embed.get("media")
+        media = raw_embed.get("media")
         if not isinstance(media, dict):
             raise BlueskyDiscoveryError("Bluesky recordWithMedia media must be a dictionary.")
         direct_embed = media
@@ -126,7 +125,7 @@ def bluesky_discovered_post_from_json(
         "app.bsky.embed.external",
         "app.bsky.embed.video",
     ):
-        direct_embed = embed
+        direct_embed = raw_embed
     elif embed_type == "app.bsky.embed.record":
         raise UnsupportedBlueskyEmbedError("Bluesky quote-only embeds are unsupported.")
     else:
@@ -151,22 +150,8 @@ def bluesky_discovered_post_from_json(
     if not isinstance(images, list):
         raise BlueskyDiscoveryError("Bluesky images must be a list.")
 
-    post_url = bluesky_post_url(post_uri)
-    post_id = allocate_post_id()
-    post = DiscoveredPost(
-        post_id,
-        source_id,
-        post_uri,
-        author_did,
-        post_url,
-    )
-    provenance = DiscoveredPostProvenance(
-        post_id,
-        post_cid,
-    )
-    artworks = []
-    artwork_metadata = []
-    for image_index, image in enumerate(images):
+    validated_images: list[tuple[str, str]] = []
+    for image in images:
         if not isinstance(image, dict):
             raise BlueskyDiscoveryError("Each Bluesky image must be a dictionary.")
         item_type = image.get("$type")
@@ -191,6 +176,25 @@ def bluesky_discovered_post_from_json(
             raise BlueskyDiscoveryError("Bluesky image blob CID must be a string.")
         if not blob_cid.strip():
             raise BlueskyDiscoveryError("Bluesky image blob CID must not be empty or whitespace.")
+        validated_images.append((alt, blob_cid))
+
+    labels = _parse_bluesky_labels(post_data)
+    post_url = bluesky_post_url(post_uri)
+    post_id = allocate_post_id()
+    post = DiscoveredPost(
+        post_id,
+        source_id,
+        post_uri,
+        author_did,
+        post_url,
+    )
+    provenance = DiscoveredPostProvenance(
+        post_id,
+        post_cid,
+    )
+    artworks = []
+    artwork_metadata = []
+    for image_index, (alt, blob_cid) in enumerate(validated_images):
         artwork_id = allocate_artwork_id()
         image_id = bluesky_image_id(post_uri, image_index)
         artworks.append(
@@ -207,7 +211,6 @@ def bluesky_discovered_post_from_json(
                 alt,
             )
         )
-    labels = _parse_bluesky_labels(post_data)
     return BlueskyDiscoveredPost(
         post,
         provenance,
@@ -237,7 +240,6 @@ def _parse_bluesky_labels(post_data: dict[str, object]) -> tuple[DiscoveredSourc
         neg = label.get("neg")
         cts = label.get("cts")
         exp = label.get("exp")
-        sig = label.get("sig")
         if not isinstance(src, str):
             raise BlueskyDiscoveryError("Bluesky label src must be a string.")
         if not isinstance(uri, str):
@@ -254,8 +256,6 @@ def _parse_bluesky_labels(post_data: dict[str, object]) -> tuple[DiscoveredSourc
             raise BlueskyDiscoveryError("Bluesky label cts must be a string.")
         if exp is not None and not isinstance(exp, str):
             raise BlueskyDiscoveryError("Bluesky label exp must be a string.")
-        if sig is not None and not isinstance(sig, str):
-            raise BlueskyDiscoveryError("Bluesky label sig must be a string.")
         parsed.append(
             DiscoveredSourceLabel(
                 src=src,
@@ -266,7 +266,6 @@ def _parse_bluesky_labels(post_data: dict[str, object]) -> tuple[DiscoveredSourc
                 neg=neg,
                 cts=cts,
                 exp=exp,
-                sig=sig,
                 hydrated=True,
             )
         )
@@ -277,12 +276,18 @@ def fetch_bluesky_feed(
     settings: BlueskyDiscoverySettings,
     cursor: str | None = None,
     opener: Callable[..., Any] | None = None,
+    allocate_post_id: Callable[[], str] | None = None,
+    allocate_artwork_id: Callable[[], str] | None = None,
 ) -> BlueskyFeedPage:
     """Fetch and map one anonymous public AppView getFeed page."""
     if not settings.enabled:
         raise BlueskyDiscoveryError("Bluesky discovery source is disabled.")
     if cursor is not None and not cursor.strip():
         raise BlueskyDiscoveryError("Bluesky cursor must not be empty or whitespace.")
+    if allocate_post_id is None:
+        raise BlueskyDiscoveryError("A post ID allocator is required.")
+    if allocate_artwork_id is None:
+        raise BlueskyDiscoveryError("An artwork ID allocator is required.")
 
     query = {
         "feed": settings.feed_uri,
@@ -299,16 +304,25 @@ def fetch_bluesky_feed(
         method="GET",
     )
     transport = opener or urlopen
+    response: Any = None
     try:
         response = transport(request, timeout=settings.timeout_seconds)
         status = getattr(response, "status", 200)
         body = response.read()
     except HTTPError as error:
+        close = getattr(error, "close", None)
+        if callable(close):
+            close()
         raise BlueskyDiscoveryError(
             f"Bluesky getFeed returned HTTP {error.code}: {error.reason}"
         ) from error
     except URLError as error:
         raise BlueskyDiscoveryError(f"Bluesky getFeed transport failed: {error.reason}") from error
+    finally:
+        if response is not None:
+            close = getattr(response, "close", None)
+            if callable(close):
+                close()
 
     if status is not None and status != 200:
         raise BlueskyDiscoveryError(f"Bluesky getFeed returned HTTP {status}.")
@@ -326,10 +340,10 @@ def fetch_bluesky_feed(
         raise BlueskyDiscoveryError("Bluesky getFeed cursor must be a string.")
 
     entries: list[BlueskyFeedEntry] = []
-    for feed_index, feed_entry in enumerate(feed):
+    for feed_entry in feed:
         if not isinstance(feed_entry, dict):
             entries.append(
-                BlueskyUnsupportedPost(
+                BlueskyUnmappedPost(
                     post_uri=None,
                     reason="Feed entry must be a dictionary.",
                 )
@@ -338,28 +352,13 @@ def fetch_bluesky_feed(
         post_data = feed_entry.get("post")
         if not isinstance(post_data, dict):
             entries.append(
-                BlueskyUnsupportedPost(
+                BlueskyUnmappedPost(
                     post_uri=None,
                     reason="Feed entry post must be a dictionary.",
                 )
             )
             continue
         post_uri = post_data.get("uri")
-        artwork_counter = 0
-        post_id_prefix = f"{settings.source_id}:post:{feed_index}"
-        artwork_id_prefix = f"{settings.source_id}:artwork:{feed_index}"
-
-        def allocate_post_id(post_id_prefix: str = post_id_prefix) -> str:
-            return post_id_prefix
-
-        def allocate_artwork_id(
-            artwork_id_prefix: str = artwork_id_prefix,
-        ) -> str:
-            nonlocal artwork_counter
-            artwork_id = f"{artwork_id_prefix}:{artwork_counter}"
-            artwork_counter += 1
-            return artwork_id
-
         try:
             mapped = bluesky_discovered_post_from_json(
                 settings.source_id,
@@ -369,14 +368,14 @@ def fetch_bluesky_feed(
             )
         except UnsupportedBlueskyEmbedError as error:
             entries.append(
-                BlueskyUnsupportedPost(
+                BlueskyUnmappedPost(
                     post_uri=post_uri if isinstance(post_uri, str) else None,
                     reason=str(error),
                 )
             )
         except BlueskyDiscoveryError as error:
             entries.append(
-                BlueskyUnsupportedPost(
+                BlueskyUnmappedPost(
                     post_uri=post_uri if isinstance(post_uri, str) else None,
                     reason=str(error),
                 )
