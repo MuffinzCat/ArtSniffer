@@ -46,8 +46,9 @@ class DiscoveredArtwork:
     post_id: str
     # Stable identifier assigned to this individual media item by its provider.
     source_item_id: str
-    # Content-derived identity used to compare artwork across provider locations.
-    content_hash: str
+    # Exact content identity once the artwork bytes have been retrieved and hashed.
+    # None means the artwork has been discovered but its exact content is not known yet.
+    content_hash: str | None = None
 
     def __post_init__(self) -> None:
         """Validate the identifiers needed to track discovered artwork."""
@@ -57,5 +58,5 @@ class DiscoveredArtwork:
             raise ValueError("Post ID must not be empty or whitespace.")
         if not self.source_item_id.strip():
             raise ValueError("Source item ID must not be empty or whitespace.")
-        if not self.content_hash.strip():
+        if self.content_hash is not None and not self.content_hash.strip():
             raise ValueError("Content hash must not be empty or whitespace.")
