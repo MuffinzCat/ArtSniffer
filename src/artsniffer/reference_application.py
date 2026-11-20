@@ -2,9 +2,13 @@
 
 from collections.abc import Callable, Sequence
 
+from artsniffer.analysis.artwork import ArtworkAnalysis
+from artsniffer.analysis.cached_image import analyse_cached_image
+from artsniffer.analysis.image_analyser import ImageAnalyser
 from artsniffer.commands.reference_paths import ensure_output_outside_reference_root
 from artsniffer.commands.safe_write import safe_write
 from artsniffer.commands.snapshot_file import encode_snapshot, read_snapshot
+from artsniffer.persistence.analysis_cache import AnalysisCache
 from artsniffer.persistence.reference_artwork import ReferenceArtworkStore
 from artsniffer.references.artwork import ArtworkRecord
 from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
@@ -120,3 +124,23 @@ def reconcile_persistent_reference_artwork(
     )
     store.replace_for_source(source_id, reconciled)
     return reconciled
+
+
+def analyse_local_reference_artwork(
+    provider: LocalFilesystemReferenceProvider,
+    artwork: ArtworkRecord,
+    *,
+    analyser: ImageAnalyser,
+    cache: AnalysisCache,
+) -> ArtworkAnalysis:
+    """Analyse one reconciled local reference through the exact-image cache."""
+    if provider.source_id != artwork.source_id:
+        raise ValueError("Artwork source ID must match local reference provider source ID.")
+    image_path = provider.image_path(artwork.source_item_id)
+    return analyse_cached_image(
+        artwork.id,
+        artwork.content_hash,
+        image_path,
+        analyser=analyser,
+        cache=cache,
+    )

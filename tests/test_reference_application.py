@@ -8,9 +8,11 @@ from unittest.mock import Mock
 import pytest
 
 from artsniffer import reference_application
+from artsniffer.analysis.artwork import ArtworkAnalysis
 from artsniffer.commands import safe_write as writer
 from artsniffer.commands.snapshot_file import encode_snapshot, read_snapshot
 from artsniffer.references.artwork import ArtworkRecord
+from artsniffer.references.local_filesystem import LocalFilesystemReferenceProvider
 from artsniffer.references.observation import ReferenceItemChangeKind, ReferenceItemObservation
 from artsniffer.references.snapshot_diff import ReferenceSnapshotChange
 from artsniffer.settings import ArtSnifferSettings, LocalReferenceLibrarySettings
@@ -646,3 +648,121 @@ def test_reconcile_persistent_empty_result_removes_source_state() -> None:
         ("get", "source-a"),
         ("replace", "source-a", ()),
     ]
+
+
+class LocalReferenceRecordingCache:
+    def __init__(self) -> None:
+        self.entries: dict[tuple[str, str, str], ArtworkAnalysis] = {}
+        self.events: list[tuple] = []
+
+    def get(self, artwork_id: str, content_hash: str, model_id: str) -> ArtworkAnalysis | None:
+        self.events.append(("get", artwork_id, content_hash, model_id))
+        return self.entries.get((artwork_id, content_hash, model_id))
+
+    def put(self, analysis: ArtworkAnalysis, content_hash: str) -> None:
+        self.events.append(("put", analysis.artwork_id, content_hash, analysis.model_id))
+        self.entries[(analysis.artwork_id, content_hash, analysis.model_id)] = analysis
+
+
+class LocalReferenceRecordingAnalyser:
+    model_id = "visual-model-v1"
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, Path]] = []
+
+    def analyse(self, artwork_id: str, image_path: Path) -> ArtworkAnalysis:
+        self.calls.append((artwork_id, image_path))
+        return ArtworkAnalysis(artwork_id, self.model_id, (0.25, 0.75), ("synthetic",))
+
+
+def test_local_reference_workflow_reuses_exact_cached_analysis(tmp_path: Path) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    image_path = root / "reference.png"
+    image_path.write_bytes(b"synthetic image")
+    provider = LocalFilesystemReferenceProvider("source-a", root)
+    record = artwork(
+        "art-local",
+        "source-a",
+        "reference.png",
+        "sha256:exact-content",
+    )
+    analyser = LocalReferenceRecordingAnalyser()
+    cache = LocalReferenceRecordingCache()
+
+    first = reference_application.analyse_local_reference_artwork(
+        provider, record, analyser=analyser, cache=cache
+    )
+    second = reference_application.analyse_local_reference_artwork(
+        provider, record, analyser=analyser, cache=cache
+    )
+
+    assert second is first
+    assert analyser.calls == [("art-local", image_path)]
+    assert cache.events == [
+        ("get", "art-local", "sha256:exact-content", "visual-model-v1"),
+        ("put", "art-local", "sha256:exact-content", "visual-model-v1"),
+        ("get", "art-local", "sha256:exact-content", "visual-model-v1"),
+    ]
+    assert image_path.read_bytes() == b"synthetic image"
+
+
+def test_local_reference_workflow_does_not_reuse_changed_content_or_model(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    (root / "reference.png").write_bytes(b"synthetic image")
+    provider = LocalFilesystemReferenceProvider("source-a", root)
+    analyser = LocalReferenceRecordingAnalyser()
+    cache = LocalReferenceRecordingCache()
+
+    first = reference_application.analyse_local_reference_artwork(
+        provider,
+        artwork("art-local", "source-a", "reference.png", "sha256:before"),
+        analyser=analyser,
+        cache=cache,
+    )
+    changed = reference_application.analyse_local_reference_artwork(
+        provider,
+        artwork("art-local", "source-a", "reference.png", "sha256:after"),
+        analyser=analyser,
+        cache=cache,
+    )
+
+    analyser.model_id = "visual-model-v2"
+    changed_model = reference_application.analyse_local_reference_artwork(
+        provider,
+        artwork("art-local", "source-a", "reference.png", "sha256:after"),
+        analyser=analyser,
+        cache=cache,
+    )
+
+    assert changed is not first
+    assert changed_model is not changed
+    assert len(analyser.calls) == 3
+    assert cache.entries[("art-local", "sha256:before", "visual-model-v1")] is first
+    assert cache.entries[("art-local", "sha256:after", "visual-model-v1")] is changed
+    assert cache.entries[("art-local", "sha256:after", "visual-model-v2")] is changed_model
+
+
+def test_local_reference_workflow_rejects_artwork_from_another_source(tmp_path: Path) -> None:
+    root = tmp_path / "library"
+    root.mkdir()
+    provider = LocalFilesystemReferenceProvider("source-a", root)
+    analyser = LocalReferenceRecordingAnalyser()
+    cache = LocalReferenceRecordingCache()
+
+    with pytest.raises(
+        ValueError,
+        match=r"\AArtwork source ID must match local reference provider source ID\.\Z",
+    ):
+        reference_application.analyse_local_reference_artwork(
+            provider,
+            artwork("art-other", "source-b", "reference.png"),
+            analyser=analyser,
+            cache=cache,
+        )
+
+    assert analyser.calls == []
+    assert cache.events == []
