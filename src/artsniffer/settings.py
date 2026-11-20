@@ -21,10 +21,46 @@ class LocalReferenceLibrarySettings:
 
 
 @dataclass(frozen=True)
+class BlueskyDiscoverySettings:
+    """Configure one bounded, anonymous Bluesky getFeed source."""
+
+    source_id: str
+    feed_uri: str
+    kind: str = "bluesky"
+    enabled: bool = True
+    limit: int = 50
+    timeout_seconds: float = 10.0
+
+    def __post_init__(self) -> None:
+        """Validate stable source identity and bounded public request parameters."""
+        if not self.source_id.strip():
+            raise ValueError("Bluesky source ID must not be empty or whitespace.")
+        if not self.feed_uri.strip():
+            raise ValueError("Bluesky feed URI must not be empty or whitespace.")
+        if not self.feed_uri.startswith("at://"):
+            raise ValueError("Bluesky feed URI must be an AT URI.")
+        if not self.kind.strip():
+            raise ValueError("Bluesky provider kind must not be empty or whitespace.")
+        if self.kind != "bluesky":
+            raise ValueError("Bluesky provider kind must be 'bluesky'.")
+        if isinstance(self.limit, bool) or not isinstance(self.limit, int):
+            raise ValueError("Bluesky result limit must be an integer.")
+        if not 1 <= self.limit <= 100:
+            raise ValueError("Bluesky result limit must be between 1 and 100.")
+        if isinstance(self.timeout_seconds, bool) or not isinstance(
+            self.timeout_seconds, (int, float)
+        ):
+            raise ValueError("Bluesky timeout must be a number.")
+        if not 0 < self.timeout_seconds <= 60:
+            raise ValueError("Bluesky timeout must be greater than 0 and at most 60 seconds.")
+
+
+@dataclass(frozen=True)
 class ArtSnifferSettings:
     """Validated settings loaded for the ArtSniffer application."""
 
     reference_libraries: tuple[LocalReferenceLibrarySettings, ...]
+    bluesky_discovery_sources: tuple[BlueskyDiscoverySettings, ...] = ()
 
     def __post_init__(self) -> None:
         seen_source_ids = set()
@@ -32,6 +68,10 @@ class ArtSnifferSettings:
             if reference_library.source_id in seen_source_ids:
                 raise ValueError(f"duplicate source ID: {reference_library.source_id}")
             seen_source_ids.add(reference_library.source_id)
+        for discovery_source in self.bluesky_discovery_sources:
+            if discovery_source.source_id in seen_source_ids:
+                raise ValueError(f"duplicate source ID: {discovery_source.source_id}")
+            seen_source_ids.add(discovery_source.source_id)
 
 
 def parse_local_reference_library(
@@ -65,6 +105,38 @@ def parse_local_reference_library(
     )
 
 
+def parse_bluesky_discovery_source(
+    source_data: dict[str, object],
+) -> BlueskyDiscoverySettings:
+    """Validate and parse one anonymous Bluesky getFeed source."""
+    source_id = source_data.get("source_id")
+    if not isinstance(source_id, str):
+        raise ValueError("Bluesky source ID must be a string.")
+    feed_uri = source_data.get("feed_uri")
+    if not isinstance(feed_uri, str):
+        raise ValueError("Bluesky feed URI must be a string.")
+    kind = source_data.get("kind", "bluesky")
+    if not isinstance(kind, str):
+        raise ValueError("Bluesky provider kind must be a string.")
+    enabled = source_data.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ValueError("Bluesky enabled state must be a boolean.")
+    limit = source_data.get("limit", 50)
+    if not isinstance(limit, int) or isinstance(limit, bool):
+        raise ValueError("Bluesky result limit must be an integer.")
+    timeout_seconds = source_data.get("timeout_seconds", 10.0)
+    if not isinstance(timeout_seconds, (int, float)) or isinstance(timeout_seconds, bool):
+        raise ValueError("Bluesky timeout must be a number.")
+    return BlueskyDiscoverySettings(
+        source_id=source_id,
+        feed_uri=feed_uri,
+        kind=kind,
+        enabled=enabled,
+        limit=limit,
+        timeout_seconds=float(timeout_seconds),
+    )
+
+
 def load_settings(config_path: Path) -> ArtSnifferSettings:
     """Load and validate ArtSniffer settings from a TOML file."""
     with config_path.open("rb") as config_file:
@@ -79,7 +151,18 @@ def load_settings(config_path: Path) -> ArtSnifferSettings:
         parsed_reference_libraries.append(
             parse_local_reference_library(reference_library, config_path.parent)
         )
-    return ArtSnifferSettings(reference_libraries=tuple(parsed_reference_libraries))
+    bluesky_sources = config_data.get("bluesky_discovery_sources", [])
+    if not isinstance(bluesky_sources, list):
+        raise ValueError("bluesky_discovery_sources must be a list")
+    parsed_bluesky_sources = []
+    for bluesky_source in bluesky_sources:
+        if not isinstance(bluesky_source, dict):
+            raise ValueError("each Bluesky discovery source must be a dictionary")
+        parsed_bluesky_sources.append(parse_bluesky_discovery_source(bluesky_source))
+    return ArtSnifferSettings(
+        reference_libraries=tuple(parsed_reference_libraries),
+        bluesky_discovery_sources=tuple(parsed_bluesky_sources),
+    )
 
 
 def find_config_path(explicit_config_path: Path | None) -> Path:

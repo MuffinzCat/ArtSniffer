@@ -8,10 +8,12 @@ import pytest
 
 from artsniffer.settings import (
     ArtSnifferSettings,
+    BlueskyDiscoverySettings,
     LocalReferenceLibrarySettings,
     create_initial_config,
     find_config_path,
     load_settings,
+    parse_bluesky_discovery_source,
     parse_local_reference_library,
 )
 
@@ -540,3 +542,72 @@ def test_find_config_path_does_not_discover_config_in_current_directory(
 
     with pytest.raises(RuntimeError, match="could not determine a default configuration"):
         find_config_path(None)
+
+
+def test_loads_bluesky_get_feed_settings(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+[[bluesky_discovery_sources]]
+source_id = "bluesky-art"
+feed_uri = "at://did:plc:feed/app.bsky.feed.generator/discover"
+enabled = true
+limit = 25
+timeout_seconds = 4.5
+""",
+        encoding="utf-8",
+    )
+
+    settings = load_settings(config_path)
+
+    assert settings.bluesky_discovery_sources == (
+        BlueskyDiscoverySettings(
+            source_id="bluesky-art",
+            feed_uri="at://did:plc:feed/app.bsky.feed.generator/discover",
+            enabled=True,
+            limit=25,
+            timeout_seconds=4.5,
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("source_data", "message"),
+    [
+        ({}, "Bluesky source ID must be a string"),
+        (
+            {"source_id": "bluesky", "feed_uri": "https://example.com"},
+            "Bluesky feed URI must be an AT URI",
+        ),
+        (
+            {
+                "source_id": "bluesky",
+                "feed_uri": "at://did:plc:feed/app.bsky.feed.generator/discover",
+                "limit": 0,
+            },
+            "Bluesky result limit must be between 1 and 100",
+        ),
+        (
+            {
+                "source_id": "bluesky",
+                "feed_uri": "at://did:plc:feed/app.bsky.feed.generator/discover",
+                "limit": 101,
+            },
+            "Bluesky result limit must be between 1 and 100",
+        ),
+        (
+            {
+                "source_id": "bluesky",
+                "feed_uri": "at://did:plc:feed/app.bsky.feed.generator/discover",
+                "timeout_seconds": 0,
+            },
+            "Bluesky timeout must be greater than 0",
+        ),
+    ],
+)
+def test_invalid_bluesky_settings_are_rejected(
+    source_data: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        parse_bluesky_discovery_source(source_data)
