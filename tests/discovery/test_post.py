@@ -45,6 +45,20 @@ def test_discovered_post_defaults_to_no_tags() -> None:
     assert post.tags == ()
 
 
+def test_discovered_post_accepts_missing_trustworthy_creator_identity() -> None:
+    """A source without verified creator attribution should leave creator_id unknown."""
+
+    post = DiscoveredPost(
+        id="post-001",
+        source_id="e621-art",
+        source_post_id="e621.net:42",
+        creator_id=None,
+        url="https://e621.net/posts/42",
+    )
+
+    assert post.creator_id is None
+
+
 @pytest.mark.parametrize("invalid_id", ["", " ", "   "])
 def test_discovered_post_rejects_empty_or_whitespace_id(invalid_id: str) -> None:
     """Discovered post IDs must contain a non-whitespace character."""
