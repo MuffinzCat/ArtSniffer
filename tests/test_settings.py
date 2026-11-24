@@ -9,11 +9,13 @@ import pytest
 from artsniffer.settings import (
     ArtSnifferSettings,
     BlueskyDiscoverySettings,
+    E621DiscoverySettings,
     LocalReferenceLibrarySettings,
     create_initial_config,
     find_config_path,
     load_settings,
     parse_bluesky_discovery_source,
+    parse_e621_discovery_source,
     parse_local_reference_library,
 )
 
@@ -611,3 +613,342 @@ def test_invalid_bluesky_settings_are_rejected(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         parse_bluesky_discovery_source(source_data)
+
+
+def valid_e621_source_data() -> dict[str, object]:
+    return {
+        "source_id": "e621-art",
+        "host": "e621.net",
+        "tag_search_expressions": ["fox", "rating:safe"],
+        "client_contact": "Artsniffer test contact",
+    }
+
+
+def test_loads_one_e621_discovery_source_with_defaults(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+[[e621_discovery_sources]]
+source_id = "e621-art"
+host = "e621.net"
+tag_search_expressions = ["fox", "rating:safe"]
+client_contact = "Artsniffer test contact"
+""",
+        encoding="utf-8",
+    )
+
+    settings = load_settings(config_path)
+
+    assert settings.e621_discovery_sources == (
+        E621DiscoverySettings(
+            source_id="e621-art",
+            host="e621.net",
+            tag_search_expressions=("fox", "rating:safe"),
+            client_contact="Artsniffer test contact",
+            enabled=True,
+            limit=50,
+            timeout_seconds=10.0,
+        ),
+    )
+
+
+@pytest.mark.parametrize("host", ["e621.net", "e926.net"])
+def test_e621_discovery_hosts_are_allow_listed(host: str) -> None:
+    source_data = valid_e621_source_data()
+    source_data["host"] = host
+
+    settings = parse_e621_discovery_source(source_data)
+
+    assert settings.host == host
+
+
+def test_multiple_e621_discovery_sources_preserve_configuration_order(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+[[e621_discovery_sources]]
+source_id = "first"
+host = "e621.net"
+tag_search_expressions = ["fox"]
+client_contact = "first contact"
+
+[[e621_discovery_sources]]
+source_id = "second"
+host = "e926.net"
+tag_search_expressions = ["cat", "rating:safe"]
+client_contact = "second contact"
+""",
+        encoding="utf-8",
+    )
+
+    sources = load_settings(config_path).e621_discovery_sources
+
+    assert tuple(source.source_id for source in sources) == ("first", "second")
+    assert tuple(source.host for source in sources) == ("e621.net", "e926.net")
+    assert sources[1].tag_search_expressions == ("cat", "rating:safe")
+
+
+def test_explicit_e621_settings_are_preserved() -> None:
+    source_data = valid_e621_source_data()
+    source_data.update(
+        {
+            "enabled": False,
+            "limit": 1,
+            "timeout_seconds": 60,
+        }
+    )
+
+    settings = parse_e621_discovery_source(source_data)
+
+    assert settings.enabled is False
+    assert settings.limit == 1
+    assert settings.timeout_seconds == 60.0
+
+
+@pytest.mark.parametrize("limit", [1, 100])
+def test_e621_limit_boundaries_are_valid(limit: int) -> None:
+    source_data = valid_e621_source_data()
+    source_data["limit"] = limit
+
+    assert parse_e621_discovery_source(source_data).limit == limit
+
+
+@pytest.mark.parametrize("timeout_seconds", [0.01, 10, 60.0])
+def test_e621_positive_timeout_values_through_60_are_valid(timeout_seconds: float) -> None:
+    source_data = valid_e621_source_data()
+    source_data["timeout_seconds"] = timeout_seconds
+
+    assert parse_e621_discovery_source(source_data).timeout_seconds == float(timeout_seconds)
+
+
+@pytest.mark.parametrize(
+    ("source_data", "message"),
+    [
+        ({}, "e621 source ID must be a string"),
+        (
+            {
+                "source_id": 12,
+                "host": "e621.net",
+                "tag_search_expressions": ["fox"],
+                "client_contact": "contact",
+            },
+            "e621 source ID must be a string",
+        ),
+        (
+            {
+                "source_id": "art",
+                "tag_search_expressions": ["fox"],
+                "client_contact": "contact",
+            },
+            "e621 host must be a string",
+        ),
+        (
+            {
+                "source_id": "art",
+                "host": 12,
+                "tag_search_expressions": ["fox"],
+                "client_contact": "contact",
+            },
+            "e621 host must be a string",
+        ),
+        (
+            {
+                "source_id": "art",
+                "host": "e621.net",
+                "client_contact": "contact",
+            },
+            "e621 tag search expressions must be a list",
+        ),
+        (
+            {
+                "source_id": "art",
+                "host": "e621.net",
+                "tag_search_expressions": "fox",
+                "client_contact": "contact",
+            },
+            "e621 tag search expressions must be a list",
+        ),
+        (
+            {
+                "source_id": "art",
+                "host": "e621.net",
+                "tag_search_expressions": ["fox", 12],
+                "client_contact": "contact",
+            },
+            "each e621 tag search expression must be a string",
+        ),
+        (
+            {
+                "source_id": "art",
+                "host": "e621.net",
+                "tag_search_expressions": ["fox"],
+            },
+            "e621 client contact must be a string",
+        ),
+        (
+            {
+                "source_id": "art",
+                "host": "e621.net",
+                "tag_search_expressions": ["fox"],
+                "client_contact": 12,
+            },
+            "e621 client contact must be a string",
+        ),
+    ],
+)
+def test_required_e621_settings_fields_and_types_are_validated(
+    source_data: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        parse_e621_discovery_source(source_data)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("source_id", "", "e621 source ID must not be empty"),
+        ("source_id", " \t ", "e621 source ID must not be empty"),
+        ("host", "", "e621 host must not be empty"),
+        ("host", " \t ", "e621 host must not be empty"),
+        ("host", "example.com", "e621 host must be either"),
+        ("tag_search_expressions", [], "e621 tag search expressions must not be empty"),
+        ("tag_search_expressions", [""], "e621 tag search expressions must be non-empty"),
+        ("tag_search_expressions", [" \t "], "e621 tag search expressions must be non-empty"),
+        ("client_contact", "", "e621 client contact must not be empty"),
+        ("client_contact", " \t ", "e621 client contact must not be empty"),
+        ("limit", 0, "e621 result limit must be between 1 and 100"),
+        ("limit", 101, "e621 result limit must be between 1 and 100"),
+        ("limit", True, "e621 result limit must be an integer"),
+        ("limit", 1.5, "e621 result limit must be an integer"),
+        ("limit", "25", "e621 result limit must be an integer"),
+        ("timeout_seconds", 0, "e621 timeout must be greater than 0"),
+        ("timeout_seconds", -1, "e621 timeout must be greater than 0"),
+        ("timeout_seconds", 60.01, "e621 timeout must be greater than 0"),
+        ("timeout_seconds", True, "e621 timeout must be a number"),
+        ("timeout_seconds", "10", "e621 timeout must be a number"),
+        ("enabled", 1, "e621 enabled state must be a boolean"),
+        ("enabled", "true", "e621 enabled state must be a boolean"),
+    ],
+)
+def test_e621_value_validation(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    source_data = valid_e621_source_data()
+    source_data[field] = value
+
+    with pytest.raises(ValueError, match=message):
+        parse_e621_discovery_source(source_data)
+
+
+def test_missing_e621_discovery_sources_means_no_e621_sources(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text("title = 'settings without e621 sources'\n", encoding="utf-8")
+
+    assert load_settings(config_path).e621_discovery_sources == ()
+
+
+@pytest.mark.parametrize(
+    ("toml", "message"),
+    [
+        (
+            "e621_discovery_sources = 'not a list'\n",
+            "e621_discovery_sources must be a list",
+        ),
+        (
+            "e621_discovery_sources = ['not a table']\n",
+            "each e621 discovery source must be a dictionary",
+        ),
+    ],
+)
+def test_invalid_e621_discovery_sources_collection_is_rejected(
+    tmp_path: Path,
+    toml: str,
+    message: str,
+) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(toml, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_settings(config_path)
+
+
+def test_duplicate_e621_source_ids_are_rejected(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+[[e621_discovery_sources]]
+source_id = "shared"
+host = "e621.net"
+tag_search_expressions = ["fox"]
+client_contact = "first contact"
+
+[[e621_discovery_sources]]
+source_id = "shared"
+host = "e926.net"
+tag_search_expressions = ["cat"]
+client_contact = "second contact"
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate source ID: shared"):
+        load_settings(config_path)
+
+
+def test_e621_source_id_cannot_duplicate_bluesky_source_id(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+[[bluesky_discovery_sources]]
+source_id = "shared"
+feed_uri = "at://did:plc:feed/app.bsky.feed.generator/discover"
+
+[[e621_discovery_sources]]
+source_id = "shared"
+host = "e621.net"
+tag_search_expressions = ["fox"]
+client_contact = "contact"
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate source ID: shared"):
+        load_settings(config_path)
+
+
+def test_e621_source_id_cannot_duplicate_local_reference_library_id(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.toml"
+    config_path.write_text(
+        """
+[[reference_libraries]]
+source_id = "shared"
+folder = "artworks"
+state_file = "state.json"
+
+[[e621_discovery_sources]]
+source_id = "shared"
+host = "e926.net"
+tag_search_expressions = ["fox"]
+client_contact = "contact"
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate source ID: shared"):
+        load_settings(config_path)
+
+
+def test_e621_settings_records_are_immutable() -> None:
+    source = E621DiscoverySettings(
+        source_id="e621-art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="contact",
+    )
+    source_attribute = "source_id"
+
+    with pytest.raises(FrozenInstanceError):
+        setattr(source, source_attribute, "other")

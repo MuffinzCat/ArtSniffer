@@ -56,11 +56,50 @@ class BlueskyDiscoverySettings:
 
 
 @dataclass(frozen=True)
+class E621DiscoverySettings:
+    """Configure one bounded, anonymous e621/e926 discovery source."""
+
+    source_id: str
+    host: str
+    tag_search_expressions: tuple[str, ...]
+    client_contact: str
+    enabled: bool = True
+    limit: int = 50
+    timeout_seconds: float = 10.0
+
+    def __post_init__(self) -> None:
+        """Validate provider identity, tag expressions, and bounded request parameters."""
+        if not self.source_id.strip():
+            raise ValueError("e621 source ID must not be empty or whitespace.")
+        if not self.host.strip():
+            raise ValueError("e621 host must not be empty or whitespace.")
+        if self.host != "e621.net" and self.host != "e926.net":
+            raise ValueError("e621 host must be either 'e621.net' or 'e926.net'.")
+        if not self.tag_search_expressions:
+            raise ValueError("e621 tag search expressions must not be empty.")
+        if not all(isinstance(tag, str) and tag.strip() for tag in self.tag_search_expressions):
+            raise ValueError("e621 tag search expressions must be non-empty strings.")
+        if not self.client_contact.strip():
+            raise ValueError("e621 client contact must not be empty or whitespace.")
+        if isinstance(self.limit, bool) or not isinstance(self.limit, int):
+            raise ValueError("e621 result limit must be an integer.")
+        if not 1 <= self.limit <= 100:
+            raise ValueError("e621 result limit must be between 1 and 100.")
+        if isinstance(self.timeout_seconds, bool) or not isinstance(
+            self.timeout_seconds, (int, float)
+        ):
+            raise ValueError("e621 timeout must be a number.")
+        if not 0 < self.timeout_seconds <= 60:
+            raise ValueError("e621 timeout must be greater than 0 and at most 60 seconds.")
+
+
+@dataclass(frozen=True)
 class ArtSnifferSettings:
     """Validated settings loaded for the ArtSniffer application."""
 
     reference_libraries: tuple[LocalReferenceLibrarySettings, ...]
     bluesky_discovery_sources: tuple[BlueskyDiscoverySettings, ...] = ()
+    e621_discovery_sources: tuple[E621DiscoverySettings, ...] = ()
 
     def __post_init__(self) -> None:
         seen_source_ids = set()
@@ -69,6 +108,10 @@ class ArtSnifferSettings:
                 raise ValueError(f"duplicate source ID: {reference_library.source_id}")
             seen_source_ids.add(reference_library.source_id)
         for discovery_source in self.bluesky_discovery_sources:
+            if discovery_source.source_id in seen_source_ids:
+                raise ValueError(f"duplicate source ID: {discovery_source.source_id}")
+            seen_source_ids.add(discovery_source.source_id)
+        for discovery_source in self.e621_discovery_sources:
             if discovery_source.source_id in seen_source_ids:
                 raise ValueError(f"duplicate source ID: {discovery_source.source_id}")
             seen_source_ids.add(discovery_source.source_id)
@@ -137,6 +180,45 @@ def parse_bluesky_discovery_source(
     )
 
 
+def parse_e621_discovery_source(
+    source_data: dict[str, object],
+) -> E621DiscoverySettings:
+    """Validate raw TOML values and convert one e621/e926 source to settings."""
+    source_id = source_data.get("source_id")
+    if not isinstance(source_id, str):
+        raise ValueError("e621 source ID must be a string.")
+    host = source_data.get("host")
+    if not isinstance(host, str):
+        raise ValueError("e621 host must be a string.")
+    tag_search_expressions = source_data.get("tag_search_expressions")
+    if not isinstance(tag_search_expressions, list):
+        raise ValueError("e621 tag search expressions must be a list.")
+    for expression in tag_search_expressions:
+        if not isinstance(expression, str):
+            raise ValueError("each e621 tag search expression must be a string.")
+    client_contact = source_data.get("client_contact")
+    if not isinstance(client_contact, str):
+        raise ValueError("e621 client contact must be a string.")
+    enabled = source_data.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ValueError("e621 enabled state must be a boolean.")
+    limit = source_data.get("limit", 50)
+    if not isinstance(limit, int) or isinstance(limit, bool):
+        raise ValueError("e621 result limit must be an integer.")
+    timeout_seconds = source_data.get("timeout_seconds", 10.0)
+    if not isinstance(timeout_seconds, (int, float)) or isinstance(timeout_seconds, bool):
+        raise ValueError("e621 timeout must be a number.")
+    return E621DiscoverySettings(
+        source_id=source_id,
+        host=host,
+        tag_search_expressions=tuple(tag_search_expressions),
+        client_contact=client_contact,
+        enabled=enabled,
+        limit=limit,
+        timeout_seconds=float(timeout_seconds),
+    )
+
+
 def load_settings(config_path: Path) -> ArtSnifferSettings:
     """Load and validate ArtSniffer settings from a TOML file."""
     with config_path.open("rb") as config_file:
@@ -159,9 +241,18 @@ def load_settings(config_path: Path) -> ArtSnifferSettings:
         if not isinstance(bluesky_source, dict):
             raise ValueError("each Bluesky discovery source must be a dictionary")
         parsed_bluesky_sources.append(parse_bluesky_discovery_source(bluesky_source))
+    e621_sources = config_data.get("e621_discovery_sources", [])
+    if not isinstance(e621_sources, list):
+        raise ValueError("e621_discovery_sources must be a list")
+    parsed_e621_sources = []
+    for e621_source in e621_sources:
+        if not isinstance(e621_source, dict):
+            raise ValueError("each e621 discovery source must be a dictionary")
+        parsed_e621_sources.append(parse_e621_discovery_source(e621_source))
     return ArtSnifferSettings(
         reference_libraries=tuple(parsed_reference_libraries),
         bluesky_discovery_sources=tuple(parsed_bluesky_sources),
+        e621_discovery_sources=tuple(parsed_e621_sources),
     )
 
 
