@@ -13,8 +13,9 @@ class DiscoveredPost:
     source_id: str
     # Stable identifier assigned to the post by its provider.
     source_post_id: str
-    # Stable provider-specific identity for the post's creator or author.
-    creator_id: str
+    # Optional verified creator attribution.
+    # None when the source does not provide trustworthy identity.
+    creator_id: str | None
     # Original provider-supplied URL used for attribution and navigation.
     url: str
     # Descriptive labels retained from the provider without reordering or deduplication.
@@ -28,7 +29,7 @@ class DiscoveredPost:
             raise ValueError("Source ID must not be empty or whitespace.")
         if not self.source_post_id.strip():
             raise ValueError("Source post ID must not be empty or whitespace.")
-        if not self.creator_id.strip():
+        if self.creator_id is not None and not self.creator_id.strip():
             raise ValueError("Creator ID must not be empty or whitespace.")
         if not self.url.strip():
             raise ValueError("URL must not be empty or whitespace.")
