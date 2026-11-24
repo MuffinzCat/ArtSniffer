@@ -72,6 +72,21 @@ ID, supplied content hash, and analyser model ID. Candidate and reference caller
 integrated, and broader end-to-end application orchestration remains planned. Full adult
 compliance, destination opt-in, and platform-specific eligibility also remain later work.
 
+## e621/e926 Discovery
+
+The bounded e621/e926 discovery adapter uses anonymous read-only `/posts.json` requests with
+configured tag expressions and host allow-listing. It sends an application User-Agent containing
+the configured contact, requests at a conservative pace, and maps successful posts without
+downloading media or changing safety policy.
+
+Each configured source stores a successful high-water post ID per exact provider tag expression and
+host. A first successful observation establishes each expression's position without emitting the
+historical backlog. Later scans catch each expression back to its own saved position and may use
+the verified `page=b<POST_ID>` backwards cursor for bounded catch-up. If catch-up is incomplete,
+the complete scan is published conservatively: no partial entries are emitted and no expression
+watermark is advanced. Later scans can safely retry posts discovered by successful expressions
+before another expression failed.
+
 ## Planned Recommendation Signals
 
 Global whole-image embeddings are one complementary signal for visual, style and composition

@@ -1,10 +1,21 @@
 """Map e621/e926 discovery responses into ArtSniffer records."""
 
+import json
 import math
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from artsniffer.discovery.post import DiscoveredArtwork, DiscoveredPost, DiscoveredPostProvenance
+from artsniffer.persistence.e621_discovery_state import (
+    E621DiscoveryState,
+    SQLiteE621DiscoveryStateStore,
+)
+from artsniffer.settings import E621DiscoverySettings
 
 
 class E621DiscoveryError(ValueError):
@@ -83,6 +94,44 @@ class E621DiscoveredPost:
     flags: E621PostFlags
     rating: E621SourceRating
     media: E621MediaMetadata
+
+
+@dataclass(frozen=True)
+class E621UnmappedPost:
+    """Describe an individual e621/e926 post that could not be mapped safely."""
+
+    post_id: int | None
+    reason: str
+
+
+E621ScanEntry = E621DiscoveredPost | E621UnmappedPost
+
+
+@dataclass(frozen=True)
+class E621DiscoveryResult:
+    """Report a completed or incomplete incremental e621/e926 scan."""
+
+    entries: tuple[E621ScanEntry, ...]
+    high_watermark: int | None
+    catch_up_complete: bool
+    failure_reasons: tuple[str, ...] = ()
+
+
+MAX_E621_RESPONSE_BODY_BYTES = 5 * 1024 * 1024
+E621_REQUEST_PACING_SECONDS = 1.25
+E621_MAX_CATCH_UP_REQUESTS = 12
+E621_MAX_CATCH_UP_RESULTS = 400
+
+
+def e621_user_agent(client_contact: str) -> str:
+    """Build a descriptive application User-Agent from validated contact configuration."""
+    if not client_contact.strip():
+        raise E621DiscoveryError("e621/e926 client contact must not be empty or whitespace.")
+    try:
+        application_version = version("artsniffer")
+    except PackageNotFoundError:
+        application_version = "0.1.0"
+    return f"ArtSniffer/{application_version} (+{client_contact})"
 
 
 def e621_discovered_post_from_json(
@@ -316,4 +365,282 @@ def e621_discovered_post_from_json(
         flags=post_flags,
         rating=source_rating,
         media=media,
+    )
+
+
+def _retry_delay(error: HTTPError) -> float | None:
+    """Read a numeric Retry-After delay from a provider response when present."""
+    retry_after = error.headers.get("Retry-After")
+    if retry_after is None:
+        return None
+    try:
+        return max(0.0, float(retry_after))
+    except (TypeError, ValueError):
+        return None
+
+
+def _fetch_e621_page(
+    settings: E621DiscoverySettings,
+    expression: str,
+    page: str | None,
+    opener: Callable[..., object],
+    pace: Callable[[], None],
+    sleeper: Callable[[float], None],
+) -> list[object]:
+    """Fetch and decode one /posts.json response with a strictly bounded retry."""
+    query: list[tuple[str, object]] = [
+        ("tags", expression),
+        ("limit", settings.limit),
+    ]
+    if page is not None:
+        query.append(("page", page))
+    url = f"https://{settings.host}/posts.json?{urlencode(query)}"
+    request = Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": e621_user_agent(settings.client_contact),
+        },
+        method="GET",
+    )
+
+    response: object | None = None
+    for attempt in range(2):
+        pace()
+        try:
+            response = opener(request, timeout=settings.timeout_seconds)
+            status = getattr(response, "status", 200)
+            if status in (429, 503) and attempt == 0:
+                close = getattr(response, "close", None)
+                if callable(close):
+                    close()
+                headers = getattr(response, "headers", None)
+                if isinstance(headers, dict):
+                    retry_value = headers.get("Retry-After")
+                    if retry_value is not None:
+                        try:
+                            sleeper(max(0.0, float(retry_value)))
+                        except (TypeError, ValueError):
+                            pass
+                continue
+            if status is not None and status != 200:
+                close = getattr(response, "close", None)
+                if callable(close):
+                    close()
+                raise E621DiscoveryError(f"e621/e926 /posts.json returned HTTP {status}.")
+            read = getattr(response, "read", None)
+            if not callable(read):
+                raise E621DiscoveryError("e621/e926 /posts.json returned an invalid response.")
+            body = read(MAX_E621_RESPONSE_BODY_BYTES + 1)
+            if not isinstance(body, (bytes, bytearray)):
+                raise E621DiscoveryError("e621/e926 /posts.json returned a non-binary body.")
+            if len(body) > MAX_E621_RESPONSE_BODY_BYTES:
+                raise E621DiscoveryError("e621/e926 /posts.json response body is too large.")
+            try:
+                payload = json.loads(body)
+            except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                raise E621DiscoveryError(
+                    "e621/e926 /posts.json returned a non-JSON response."
+                ) from error
+            if not isinstance(payload, list):
+                raise E621DiscoveryError("e621/e926 /posts.json payload must be a top-level list.")
+            return payload
+        except HTTPError as error:
+            close = getattr(error, "close", None)
+            if callable(close):
+                close()
+            if error.code in (429, 503) and attempt == 0:
+                retry_delay = _retry_delay(error)
+                if retry_delay is not None:
+                    sleeper(retry_delay)
+                continue
+            raise E621DiscoveryError(
+                f"e621/e926 /posts.json returned HTTP {error.code}: {error.reason}"
+            ) from error
+        except (URLError, TimeoutError, OSError) as error:
+            raise E621DiscoveryError(f"e621/e926 /posts.json transport failed: {error}") from error
+        finally:
+            if response is not None:
+                close = getattr(response, "close", None)
+                if callable(close):
+                    close()
+                response = None
+
+    raise E621DiscoveryError("e621/e926 /posts.json remains rate-limited after one bounded retry.")
+
+
+def fetch_e621_posts(
+    settings: E621DiscoverySettings,
+    state_store: SQLiteE621DiscoveryStateStore,
+    allocate_post_id: Callable[[], str],
+    allocate_artwork_id: Callable[[], str],
+    opener: Callable[..., object] | None = None,
+    sleeper: Callable[[float], None] | None = None,
+    max_requests: int = E621_MAX_CATCH_UP_REQUESTS,
+    max_results: int = E621_MAX_CATCH_UP_RESULTS,
+) -> E621DiscoveryResult:
+    """Fetch, map, and incrementally scan one configured e621/e926 source."""
+    if not settings.enabled:
+        raise E621DiscoveryError("e621/e926 discovery source is disabled.")
+    if isinstance(max_requests, bool) or not isinstance(max_requests, int) or max_requests < 1:
+        raise E621DiscoveryError("e621/e926 maximum requests must be a positive integer.")
+    if isinstance(max_results, bool) or not isinstance(max_results, int) or max_results < 1:
+        raise E621DiscoveryError("e621/e926 maximum results must be a positive integer.")
+
+    transport = opener or urlopen
+    sleep = sleeper or time.sleep
+    request_count = 0
+    actual_request_count = 0
+
+    def pace() -> None:
+        nonlocal actual_request_count
+        if actual_request_count > 0:
+            sleep(E621_REQUEST_PACING_SECONDS)
+        actual_request_count += 1
+
+    candidate_posts: dict[int, dict[str, object]] = {}
+    unmapped_posts: list[E621UnmappedPost] = []
+    catch_up_complete = True
+    committed_watermarks: list[int] = []
+    proposed_watermarks: list[int] = []
+    failure_reasons: list[str] = []
+    proposed_states: list[E621DiscoveryState] = []
+
+    for expression in settings.tag_search_expressions:
+        state = state_store.get(
+            settings.source_id,
+            settings.host,
+            expression,
+        )
+        old_watermark = state.high_watermark
+        if old_watermark is not None:
+            committed_watermarks.append(old_watermark)
+        expression_seen_ids: set[int] = set()
+        expression_complete = True
+        expression_failed = False
+        before_id: int | None = None
+        while True:
+            if request_count >= max_requests:
+                expression_complete = False
+                failure_reasons.append(f"{expression}: catch-up request budget exhausted.")
+                break
+
+            request_count += 1
+            try:
+                page = _fetch_e621_page(
+                    settings,
+                    expression,
+                    None if before_id is None else f"b{before_id}",
+                    transport,
+                    pace,
+                    sleep,
+                )
+            except E621DiscoveryError as error:
+                expression_complete = False
+                expression_failed = True
+                failure_reasons.append(f"{expression}: {error}")
+                break
+
+            numeric_ids: list[int] = []
+            for post_data in page:
+                if not isinstance(post_data, dict):
+                    unmapped_posts.append(
+                        E621UnmappedPost(post_id=None, reason="Post must be a dictionary.")
+                    )
+                    continue
+                post_id = post_data.get("id")
+                if isinstance(post_id, bool) or not isinstance(post_id, int):
+                    unmapped_posts.append(
+                        E621UnmappedPost(
+                            post_id=None,
+                            reason="Post ID must be an integer.",
+                        )
+                    )
+                    continue
+                numeric_ids.append(post_id)
+                expression_seen_ids.add(post_id)
+                if old_watermark is not None and post_id > old_watermark:
+                    candidate_posts.setdefault(post_id, post_data)
+
+            if old_watermark is None:
+                break
+            if not numeric_ids:
+                break
+            lowest_id = min(numeric_ids)
+            if lowest_id <= old_watermark:
+                break
+            expression_candidates = {
+                post_id for post_id in expression_seen_ids if post_id > old_watermark
+            }
+            if len(expression_candidates) > max_results:
+                expression_complete = False
+                failure_reasons.append(f"{expression}: catch-up result budget exhausted.")
+                break
+            if request_count >= max_requests:
+                expression_complete = False
+                failure_reasons.append(f"{expression}: catch-up request budget exhausted.")
+                break
+            if before_id == lowest_id:
+                expression_complete = False
+                failure_reasons.append(f"{expression}: backwards cursor made no progress.")
+                break
+            before_id = lowest_id
+
+        if expression_failed:
+            catch_up_complete = False
+            continue
+        if not expression_complete:
+            catch_up_complete = False
+            continue
+
+        if old_watermark is None:
+            new_watermark = max(expression_seen_ids) if expression_seen_ids else None
+        else:
+            new_watermark = max(expression_seen_ids | {old_watermark})
+        proposed_states.append(
+            E621DiscoveryState(
+                source_id=settings.source_id,
+                host=settings.host,
+                tag_search_expression=expression,
+                high_watermark=new_watermark,
+                catch_up_incomplete=False,
+            )
+        )
+        if new_watermark is not None:
+            proposed_watermarks.append(new_watermark)
+
+    if catch_up_complete:
+        entries: list[E621ScanEntry] = []
+        for post_id, post_data in candidate_posts.items():
+            try:
+                entries.append(
+                    e621_discovered_post_from_json(
+                        settings.source_id,
+                        settings.host,
+                        post_data,
+                        allocate_post_id,
+                        allocate_artwork_id,
+                    )
+                )
+            except E621DiscoveryError as error:
+                entries.append(
+                    E621UnmappedPost(
+                        post_id=post_id,
+                        reason=str(error),
+                    )
+                )
+        entries.extend(unmapped_posts)
+        state_store.save_many(tuple(proposed_states))
+        return E621DiscoveryResult(
+            entries=tuple(entries),
+            high_watermark=max(proposed_watermarks) if proposed_watermarks else None,
+            catch_up_complete=True,
+            failure_reasons=tuple(failure_reasons),
+        )
+
+    return E621DiscoveryResult(
+        entries=(),
+        high_watermark=max(committed_watermarks) if committed_watermarks else None,
+        catch_up_complete=False,
+        failure_reasons=tuple(failure_reasons),
     )

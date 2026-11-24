@@ -1,12 +1,25 @@
 """Synthetic tests for the bounded e621/e926 JSON mapper."""
 
+import json
+from email.message import Message
+from urllib.error import HTTPError, URLError
+from urllib.request import Request
+
 import pytest
 
 from artsniffer.discovery.e621 import (
     E621DiscoveredPost,
     E621DiscoveryError,
+    E621UnmappedPost,
     e621_discovered_post_from_json,
+    e621_user_agent,
+    fetch_e621_posts,
 )
+from artsniffer.persistence.e621_discovery_state import (
+    E621DiscoveryState,
+    SQLiteE621DiscoveryStateStore,
+)
+from artsniffer.settings import E621DiscoverySettings
 
 
 def representative_post() -> dict[str, object]:
@@ -483,3 +496,1009 @@ def test_post_must_be_a_dictionary() -> None:
             lambda: "post",
             lambda: "artwork",
         )
+
+
+class FakeResponse:
+    def __init__(
+        self,
+        payload: object,
+        *,
+        status: int = 200,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        self.status = status
+        self.headers = headers or {}
+        self.closed = False
+        self._body = json.dumps(payload).encode("utf-8")
+
+    def read(self, size: int = -1) -> bytes:
+        if size >= 0:
+            return self._body[:size]
+        return self._body
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class OversizedResponse:
+    status = 200
+
+    def __init__(self) -> None:
+        self.closed = False
+
+    def read(self, size: int = -1) -> bytes:
+        return b"x" * size
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def post_with_id(post_id: int) -> dict[str, object]:
+    post = representative_post()
+    post["id"] = post_id
+    return post
+
+
+def allocate(label: str):
+    counter = 0
+
+    def next_id() -> str:
+        nonlocal counter
+        counter += 1
+        return f"{label}-{counter}"
+
+    return next_id
+
+
+def test_user_agent_contains_application_identity_and_contact() -> None:
+    user_agent = e621_user_agent("owner@example.test")
+
+    assert user_agent.startswith("ArtSniffer/")
+    assert "(+owner@example.test)" in user_agent
+
+
+@pytest.mark.parametrize("host", ["e621.net", "e926.net"])
+def test_fetch_constructs_request_url_limit_timeout_and_user_agent(
+    tmp_path,
+    host: str,
+) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host=host,
+        tag_search_expressions=("fox rating:safe",),
+        client_contact="owner@example.test",
+        limit=2,
+        timeout_seconds=3.5,
+    )
+    seen_request: Request | None = None
+    seen_timeout: float | None = None
+    seen_response = FakeResponse([])
+
+    def opener(request: Request, *, timeout: float) -> FakeResponse:
+        nonlocal seen_request, seen_timeout
+        seen_request = request
+        seen_timeout = timeout
+        return seen_response
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+        )
+    finally:
+        store.close()
+
+    assert result.catch_up_complete is True
+    assert seen_request is not None
+    assert seen_request.full_url.startswith(f"https://{host}/posts.json?")
+    assert "tags=fox+rating%3Asafe" in seen_request.full_url
+    assert "limit=2" in seen_request.full_url
+    assert "page=" not in seen_request.full_url
+    assert seen_timeout == 3.5
+    assert seen_request.headers["User-agent"].startswith("ArtSniffer/")
+    assert "(+owner@example.test)" in seen_request.headers["User-agent"]
+    assert seen_request.headers["Accept"] == "application/json"
+    assert seen_response.closed is True
+
+
+def test_first_run_establishes_watermark_without_emitting_backlog(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse(
+                [post_with_id(6880578), post_with_id(6879238)]
+            ),
+            sleeper=lambda _seconds: None,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert result.entries == ()
+    assert result.high_watermark == 6880578
+    assert state.high_watermark == 6880578
+    assert state.catch_up_incomplete is False
+
+
+def test_subsequent_scan_emits_only_posts_above_watermark(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=6879238,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse(
+                [post_with_id(6880578), post_with_id(6879238), post_with_id(6879235)]
+            ),
+            sleeper=lambda _seconds: None,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert len(result.entries) == 1
+    entry = result.entries[0]
+    assert isinstance(entry, E621DiscoveredPost)
+    assert entry.post.source_post_id == "e621.net:6880578"
+    assert result.high_watermark == 6880578
+    assert state.high_watermark == 6880578
+
+
+def test_bounded_catch_up_walks_backwards_and_reaches_old_watermark(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+        limit=2,
+    )
+    requests: list[str] = []
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        requests.append(request.full_url)
+        page = next(
+            (
+                parameter.split("=", 1)[1]
+                for parameter in request.full_url.split("?")[-1].split("&")
+                if parameter.startswith("page=")
+            ),
+            None,
+        )
+        if page is None:
+            return FakeResponse([post_with_id(130), post_with_id(120)])
+        if page == "b120":
+            return FakeResponse([post_with_id(110), post_with_id(105)])
+        if page == "b105":
+            return FakeResponse([post_with_id(100), post_with_id(95)])
+        raise AssertionError(f"Unexpected page: {page}")
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+            max_requests=3,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert len(requests) == 3
+    assert "page=b120" in requests[1]
+    assert "page=b105" in requests[2]
+    assert len(result.entries) == 4
+    mapped_entries = [entry for entry in result.entries if isinstance(entry, E621DiscoveredPost)]
+    assert {entry.post.source_post_id for entry in mapped_entries} == {
+        "e621.net:130",
+        "e621.net:120",
+        "e621.net:110",
+        "e621.net:105",
+    }
+    assert result.catch_up_complete is True
+    assert state.high_watermark == 130
+
+
+def test_incomplete_catch_up_preserves_old_watermark(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        if "page=" not in request.full_url:
+            return FakeResponse([post_with_id(130), post_with_id(120)])
+        return FakeResponse([post_with_id(110), post_with_id(105)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+            max_requests=1,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert result.entries == ()
+    assert result.catch_up_complete is False
+    assert result.high_watermark == 100
+    assert state.high_watermark == 100
+    assert state.catch_up_incomplete is False
+
+
+def test_failed_scan_does_not_advance_watermark(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+
+    def opener(_request: Request, **_kwargs: object) -> object:
+        raise URLError("synthetic transport failure")
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert result.catch_up_complete is False
+    assert any("transport failed" in reason for reason in result.failure_reasons)
+    assert state.high_watermark == 100
+    assert state.catch_up_incomplete is False
+
+
+def test_overlapping_expressions_emit_provider_post_once(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "fox rating:safe"),
+        client_contact="owner@example.test",
+    )
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse([post_with_id(130), post_with_id(100)]),
+            sleeper=lambda _seconds: None,
+            max_requests=4,
+        )
+    finally:
+        store.close()
+
+    assert len(result.entries) == 1
+    entry = result.entries[0]
+    assert isinstance(entry, E621DiscoveredPost)
+    assert entry.post.source_post_id == "e621.net:130"
+
+
+def test_empty_result_is_a_successful_complete_scan(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse([]),
+            sleeper=lambda _seconds: None,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert result.catch_up_complete is True
+    assert result.high_watermark is None
+    assert state.high_watermark is None
+
+
+def test_malformed_individual_post_is_unmapped(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse(
+                [{"id": 130, "rating": "unknown"}, post_with_id(100)]
+            ),
+            sleeper=lambda _seconds: None,
+        )
+    finally:
+        store.close()
+
+    assert len(result.entries) == 1
+    assert isinstance(result.entries[0], E621UnmappedPost)
+    assert result.entries[0].post_id == 130
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        ({}, "top-level list"),
+        ("not a list", "top-level list"),
+    ],
+)
+def test_fetch_rejects_non_list_top_level_payload(
+    tmp_path,
+    payload: object,
+    message: str,
+) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse(payload),
+        )
+    finally:
+        store.close()
+    assert result.catch_up_complete is False
+    assert any(message in reason for reason in result.failure_reasons)
+
+
+def test_fetch_rejects_http_error(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+
+    def fail(_request: Request, **_kwargs: object) -> object:
+        raise HTTPError(
+            "https://e621.net/posts.json",
+            403,
+            "Forbidden",
+            Message(),
+            None,
+        )
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=fail,
+        )
+    finally:
+        store.close()
+    assert result.catch_up_complete is False
+    assert any("HTTP 403" in reason for reason in result.failure_reasons)
+
+
+def test_fetch_retries_503_once(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    attempts = 0
+    waits: list[float] = []
+
+    def opener(_request: Request, **_kwargs: object) -> FakeResponse:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return FakeResponse([], status=503, headers={"Retry-After": "2"})
+        return FakeResponse([])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=waits.append,
+        )
+    finally:
+        store.close()
+
+    assert attempts == 2
+    assert waits == [2.0, 1.25]
+    assert result.catch_up_complete is True
+
+
+def test_fetch_rejects_response_over_size_bound(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: OversizedResponse(),
+        )
+    finally:
+        store.close()
+    assert result.catch_up_complete is False
+    assert any("too large" in reason for reason in result.failure_reasons)
+
+
+def test_no_progress_cursor_marks_catch_up_incomplete(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox",),
+        client_contact="owner@example.test",
+    )
+    requests = 0
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        nonlocal requests
+        requests += 1
+        if "page=" not in request.full_url:
+            return FakeResponse([post_with_id(130), post_with_id(120)])
+        return FakeResponse([post_with_id(120), post_with_id(110)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+            max_requests=12,
+        )
+        state = store.get("art", "e621.net", "fox")
+    finally:
+        store.close()
+
+    assert result.catch_up_complete is False
+    assert result.high_watermark == 100
+    assert state.catch_up_incomplete is False
+    assert requests == 3
+
+
+def test_multiple_expressions_are_requested_sequentially_and_paced(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="fox",
+            high_watermark=100,
+        )
+    )
+    store.save(
+        E621DiscoveryState(
+            source_id="art",
+            host="e621.net",
+            tag_search_expression="cat",
+            high_watermark=100,
+        )
+    )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "cat"),
+        client_contact="owner@example.test",
+    )
+    requested_tags: list[str] = []
+    waits: list[float] = []
+    active_requests = 0
+    maximum_active_requests = 0
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        nonlocal active_requests, maximum_active_requests
+        active_requests += 1
+        maximum_active_requests = max(maximum_active_requests, active_requests)
+        query = request.full_url.split("?", 1)[1]
+        requested_tags.append(next(part for part in query.split("&") if part.startswith("tags=")))
+        active_requests -= 1
+        return FakeResponse([post_with_id(100)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=waits.append,
+        )
+    finally:
+        store.close()
+
+    assert maximum_active_requests == 1
+    assert requested_tags == ["tags=fox", "tags=cat"]
+    assert waits == [1.25]
+    assert result.catch_up_complete is True
+
+
+def test_later_expression_cannot_advance_earlier_expression_watermark(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "cat"),
+        client_contact="owner@example.test",
+    )
+
+    def first_scan(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            return FakeResponse([post_with_id(200), post_with_id(100)])
+        return FakeResponse([post_with_id(300), post_with_id(100)])
+
+    try:
+        first = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=first_scan,
+            sleeper=lambda _seconds: None,
+        )
+        assert first.catch_up_complete is True
+        assert store.get("art", "e621.net", "fox").high_watermark == 200
+        assert store.get("art", "e621.net", "cat").high_watermark == 300
+
+        def second_scan(request: Request, **_kwargs: object) -> FakeResponse:
+            if "tags=fox" in request.full_url:
+                return FakeResponse([post_with_id(250), post_with_id(200)])
+            return FakeResponse([post_with_id(300), post_with_id(250)])
+
+        second = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=second_scan,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert second.catch_up_complete is True
+        assert store.get("art", "e621.net", "fox").high_watermark == 250
+        assert store.get("art", "e621.net", "cat").high_watermark == 300
+    finally:
+        store.close()
+
+
+def test_independent_first_run_initializes_each_expression(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "cat"),
+        client_contact="owner@example.test",
+    )
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            return FakeResponse([post_with_id(200), post_with_id(150)])
+        return FakeResponse([post_with_id(300), post_with_id(250)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert result.entries == ()
+        assert store.get("art", "e621.net", "fox").high_watermark == 200
+        assert store.get("art", "e621.net", "cat").high_watermark == 300
+    finally:
+        store.close()
+
+
+def test_independent_successful_expression_advancement(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    for expression, watermark in (("fox", 100), ("cat", 200)):
+        store.save(
+            E621DiscoveryState(
+                source_id="art",
+                host="e621.net",
+                tag_search_expression=expression,
+                high_watermark=watermark,
+            )
+        )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "cat"),
+        client_contact="owner@example.test",
+    )
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            return FakeResponse([post_with_id(150), post_with_id(100)])
+        return FakeResponse([post_with_id(250), post_with_id(200)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert result.catch_up_complete is True
+        assert store.get("art", "e621.net", "fox").high_watermark == 150
+        assert store.get("art", "e621.net", "cat").high_watermark == 250
+    finally:
+        store.close()
+
+
+def test_one_incomplete_expression_preserves_only_that_expression(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    for expression, watermark in (("fox", 100), ("cat", 200)):
+        store.save(
+            E621DiscoveryState(
+                source_id="art",
+                host="e621.net",
+                tag_search_expression=expression,
+                high_watermark=watermark,
+            )
+        )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "cat"),
+        client_contact="owner@example.test",
+    )
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            if "page=" not in request.full_url:
+                return FakeResponse([post_with_id(150), post_with_id(120)])
+            return FakeResponse([post_with_id(110), post_with_id(100)])
+        return FakeResponse([post_with_id(250), post_with_id(200)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+            max_requests=1,
+        )
+
+        assert result.entries == ()
+        assert result.catch_up_complete is False
+        assert store.get("art", "e621.net", "fox").high_watermark == 100
+        assert store.get("art", "e621.net", "fox").catch_up_incomplete is False
+        assert store.get("art", "e621.net", "cat").high_watermark == 200
+    finally:
+        store.close()
+
+
+def test_one_failed_expression_does_not_advance_it(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    for expression, watermark in (("fox", 100), ("cat", 200)):
+        store.save(
+            E621DiscoveryState(
+                source_id="art",
+                host="e621.net",
+                tag_search_expression=expression,
+                high_watermark=watermark,
+            )
+        )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "cat"),
+        client_contact="owner@example.test",
+    )
+
+    def opener(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            raise URLError("synthetic fox failure")
+        return FakeResponse([post_with_id(250), post_with_id(200)])
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=opener,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert result.entries == ()
+        assert result.catch_up_complete is False
+        assert store.get("art", "e621.net", "fox").high_watermark == 100
+        assert store.get("art", "e621.net", "cat").high_watermark == 200
+    finally:
+        store.close()
+
+
+def test_overlap_deduplication_with_separate_expression_states(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    for expression, watermark in (("fox", 100), ("fox rating:safe", 100)):
+        store.save(
+            E621DiscoveryState(
+                source_id="art",
+                host="e621.net",
+                tag_search_expression=expression,
+                high_watermark=watermark,
+            )
+        )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "fox rating:safe"),
+        client_contact="owner@example.test",
+    )
+
+    try:
+        result = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=lambda _request, **_kwargs: FakeResponse([post_with_id(130), post_with_id(100)]),
+            sleeper=lambda _seconds: None,
+        )
+    finally:
+        store.close()
+
+    assert len(result.entries) == 1
+    assert isinstance(result.entries[0], E621DiscoveredPost)
+    assert result.entries[0].post.source_post_id == "e621.net:130"
+
+
+def test_atomic_publication_preserves_posts_for_next_successful_scan(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    for expression in ("fox", "wolf"):
+        store.save(
+            E621DiscoveryState(
+                source_id="art",
+                host="e621.net",
+                tag_search_expression=expression,
+                high_watermark=100,
+            )
+        )
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "wolf"),
+        client_contact="owner@example.test",
+    )
+
+    def failed_scan(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            return FakeResponse([post_with_id(120), post_with_id(110)])
+        raise URLError("synthetic wolf failure")
+
+    try:
+        incomplete = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=failed_scan,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert incomplete.entries == ()
+        assert incomplete.catch_up_complete is False
+        assert incomplete.high_watermark == 100
+        assert store.get("art", "e621.net", "fox").high_watermark == 100
+        assert store.get("art", "e621.net", "wolf").high_watermark == 100
+
+        def successful_scan(request: Request, **_kwargs: object) -> FakeResponse:
+            if "tags=fox" in request.full_url:
+                if "page=" not in request.full_url:
+                    return FakeResponse([post_with_id(120), post_with_id(110)])
+                return FakeResponse([post_with_id(100), post_with_id(90)])
+            return FakeResponse([post_with_id(105), post_with_id(100)])
+
+        complete = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=successful_scan,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert complete.catch_up_complete is True
+        assert {
+            entry.post.source_post_id
+            for entry in complete.entries
+            if isinstance(entry, E621DiscoveredPost)
+        } == {
+            "e621.net:120",
+            "e621.net:110",
+            "e621.net:105",
+        }
+        assert store.get("art", "e621.net", "fox").high_watermark == 120
+        assert store.get("art", "e621.net", "wolf").high_watermark == 105
+    finally:
+        store.close()
+
+
+def test_atomic_first_run_initialization_needs_every_expression(tmp_path) -> None:
+    store = SQLiteE621DiscoveryStateStore(tmp_path / "e621.sqlite")
+    settings = E621DiscoverySettings(
+        source_id="art",
+        host="e621.net",
+        tag_search_expressions=("fox", "wolf"),
+        client_contact="owner@example.test",
+    )
+
+    def incomplete_first_scan(request: Request, **_kwargs: object) -> FakeResponse:
+        if "tags=fox" in request.full_url:
+            return FakeResponse([post_with_id(200), post_with_id(150)])
+        raise URLError("synthetic wolf failure")
+
+    try:
+        incomplete = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=incomplete_first_scan,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert incomplete.entries == ()
+        assert incomplete.catch_up_complete is False
+        assert store.get("art", "e621.net", "fox").high_watermark is None
+        assert store.get("art", "e621.net", "wolf").high_watermark is None
+
+        def successful_first_scan(request: Request, **_kwargs: object) -> FakeResponse:
+            if "tags=fox" in request.full_url:
+                return FakeResponse([post_with_id(200), post_with_id(150)])
+            return FakeResponse([post_with_id(220), post_with_id(180)])
+
+        complete = fetch_e621_posts(
+            settings,
+            store,
+            allocate("post"),
+            allocate("artwork"),
+            opener=successful_first_scan,
+            sleeper=lambda _seconds: None,
+        )
+
+        assert complete.entries == ()
+        assert complete.catch_up_complete is True
+        assert store.get("art", "e621.net", "fox").high_watermark == 200
+        assert store.get("art", "e621.net", "wolf").high_watermark == 220
+    finally:
+        store.close()
